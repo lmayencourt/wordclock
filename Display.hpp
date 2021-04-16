@@ -9,7 +9,7 @@
 #define PIN 13 // On Trinket or Gemma, suggest changing this to 1
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS 110 // Popular NeoPixel ring size
+#define NUMPIXELS 114 // Popular NeoPixel ring size
 
 #define DISPLAY_WIDTH 11
 #define DISPLAY_HEIGTH 10
@@ -75,6 +75,14 @@ private:
 		{8, 9, 3}, // uhr
 	};
 
+	int dots[4][3] = {
+		// start_x, start_y, length
+		{0, 10, 1}, // .
+		{0, 10, 2}, // . .
+		{0, 10, 3}, // . . .
+		{0, 10, 4}, // . . . .
+	};
+
 public:
 	void init() {
 		Serial.println("Init NeoPixel\r\n");
@@ -101,6 +109,13 @@ public:
 			corrected_x = DISPLAY_WIDTH-1-x;
 		}
 		pixel_num = (DISPLAY_WIDTH)*corrected_y + corrected_x;
+		// minutes dots are the 4 first leds. Map them at [10,0-3]
+		if (y < DISPLAY_HEIGTH) {
+			pixel_num += 4;
+		} else {
+			pixel_num = x;
+		}
+
 		if (brigthness <= MAX_BRIGTHNESS)
 			pixels.setPixelColor(pixel_num, pixels.Color(brigthness, brigthness, brigthness));
 		else
@@ -115,17 +130,26 @@ public:
 	}
 
   	void test(int level) {
-
+		int brightness = 2;
 		if (level == 0) {
 			// set every pixel one by one in order
 			clear();
 			for (int y=0; y<DISPLAY_HEIGTH; y++) {
 				for (int x=0; x<DISPLAY_WIDTH; x++) {
-					setPixel(x, y, 5);
+					setPixel(x, y, brightness);
 					display();
 					delay(80);
 					clear();
 				}
+			}
+
+			clear();
+			// minutes dots
+			for (int x=0; x<4; x++) {
+					setPixel(x, DISPLAY_HEIGTH, brightness);
+					display();
+					delay(80);
+					clear();
 			}
 
 			// display a diagonal
@@ -133,7 +157,7 @@ public:
 			for (int y=0; y<DISPLAY_HEIGTH; y++) {
 				for (int x=0; x<DISPLAY_WIDTH; x++) {
 					if (x==y)
-						setPixel(x, y, 5);
+						setPixel(x, y, brightness);
 					else
 						setPixel(x, y, 0);
 				}
@@ -171,6 +195,14 @@ public:
 			clear();
 			for (int i=0; i<3; i++) {
 				displayFromLut(word, i);
+				display();
+				delay(750);
+				clear();
+			}
+			// display all dots
+			clear();
+			for (int i=0; i<4; i++) {
+				displayFromLut(dots, i);
 				display();
 				delay(750);
 				clear();
@@ -264,6 +296,10 @@ public:
 			displayFromLut(preposition, 1);
 		}
 		
+		// display inter'minutes
+		int minutes_dot = min%5 -1; 
+		displayFromLut(dots, minutes_dot);
+
 		display();
 
 	  	// Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
