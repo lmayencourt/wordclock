@@ -18,7 +18,7 @@
 
 #define DISPLAY_TESTS_PIXELS 0
 #define DISPLAY_TESTS_WORD 1
-#define DISPLAY_TESTS_TIME 3
+#define DISPLAY_TESTS_TIME 4
 
 // When setting up the NeoPixel library, we tell it how many pixels,
 // and which pin to use to send signals. Note that for older NeoPixel
@@ -237,10 +237,6 @@ public:
 		int brightness = 10;
 		clear();
 
-		// Es isch
-		displayFromLut(word, 0);
-		displayFromLut(word, 1);
-
 		// Display hour
 		int hour_to_display = hour;
 		if (min >= 25) {
@@ -261,6 +257,9 @@ public:
 		// Display minutes
 		int minutes_word=0;
 		if (min < 5) {
+			// Es isch
+			displayFromLut(word, 0);
+			displayFromLut(word, 1);
 			// uhr
 			minutes_word = min/5;
 			Serial.printf(" <5 id: %d\n\r", minutes_word);
@@ -301,25 +300,6 @@ public:
 		displayFromLut(dots, minutes_dot);
 
 		display();
-
-	  	// Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-		// Serial.print("Hour: ");
-		// Serial.println(&timeinfo, "%H");
-		// Serial.print("Hour (12 hour format): ");
-		// Serial.println(&timeinfo, "%I");
-		// Serial.print("Minute: ");
-		// Serial.println(&timeinfo, "%M");
-		// Serial.print("Second: ");
-		// Serial.println(&timeinfo, "%S");
-
-		// Serial.println("Time variables");
-		// char timeHour[3];
-		// strftime(timeHour,3, "%H", &timeinfo);
-		// Serial.println(timeHour);
-		// char timeWeekDay[10];
-		// strftime(timeWeekDay,10, "%A", &timeinfo);
-		// Serial.println(timeWeekDay);
-		// Serial.println();
   	}
 
 	void displayError() {

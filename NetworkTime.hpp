@@ -14,22 +14,20 @@ private:
 
 public:
 
+	static void initTZ() {
+		// https://remotemonitoringsystems.ca/time-zone-abbreviations.php
+		setenv("TZ", "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", 1);
+		tzset(); // save the TZ variable	
+	}
+
 	static void init() {
 		// Init and get the time
 		daylightOffset_sec = 0;
 		configTime(gmtOffset_sec, daylightOffset_sec, NTP_SERVER);
 		printLocalTime();
+
+		initTZ();
 		timeValid = true;
-	}
-
-	static void setSummerTime(bool summer_offset) {
-		if (summer_offset) {
-			daylightOffset_sec = 3600;
-		} else {
-			daylightOffset_sec = 0;
-		}
-
-		configTime(gmtOffset_sec, daylightOffset_sec, NTP_SERVER);
 	}
 
 	static bool timeIsValid() {
@@ -68,9 +66,13 @@ public:
 		char timeWeekDay[10];
 		strftime(timeWeekDay,10, "%A", &timeinfo);
 		Serial.println(timeWeekDay);
+
+		Serial.print("Daylight saving flag:");
+		Serial.println(timeinfo.tm_isdst);
 		Serial.println();
+
 	}
-	
+
 };
 
 int NetworkTime::daylightOffset_sec = 0;

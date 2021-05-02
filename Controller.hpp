@@ -177,6 +177,7 @@ public:
 		Serial.println("state: clock");
 
 		struct tm timeinfo;
+		NetworkTime::initTZ();
 		if (!getLocalTime(&timeinfo)) {
 			// time is not valid yet, ask network
 			Serial.println("no valid time, query from network");
@@ -200,8 +201,11 @@ public:
 			// 	return;
 			// }
 
-			Serial.println(timeinfo.tm_hour);
+			Serial.print("Time already valid: ");
+			Serial.print(timeinfo.tm_hour);
+			Serial.println(timeinfo.tm_min);
 			display.displayTime(timeinfo.tm_hour, timeinfo.tm_min);
+			Serial.println("Go to sleep now");
 			esp_sleep_enable_timer_wakeup(30*1000*1000);
 			Serial.flush();
   			esp_deep_sleep_start();
