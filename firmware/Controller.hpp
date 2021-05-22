@@ -74,6 +74,10 @@ void UpdateLog(String txt) {
 #include "ConfigServer.hpp"
 
 ///////////////////////////////////////////////////
+// Firmware over the air
+#include "FirmwareOverTheAir.hpp"
+
+///////////////////////////////////////////////////
 // Telegram Bot
 // Replace with your network credentials
 //#include "telegram_bot.hpp"
@@ -127,6 +131,9 @@ public:
 	void stateStartup() {
 		UpdateState("Startup");
 
+		String version = Fota::currentVersion();
+		Serial.println("Starup with v" + version);
+
 		// Check the reset reason
 		esp_reset_reason_t reset_reason = esp_reset_reason();
 		if (reset_reason == ESP_RST_DEEPSLEEP) {
@@ -144,7 +151,7 @@ public:
 			// }
 			Serial.println("Wakeup from deep-sleep");
 			state = state_clock;
-			return;
+			// return;
 		}
 
 		// Check matrix display
@@ -176,10 +183,13 @@ public:
 	void stateCLock() {
 		Serial.println("state: clock");
 
+		// Check if time is already set
 		struct tm timeinfo;
 		NetworkTime::initTZ();
-		if (!getLocalTime(&timeinfo)) {
-			// time is not valid yet, ask network
+		bool timeValid = getLocalTime(&timeinfo);
+
+		if (!timeValid) {
+			// Time is not valid yet, ask network
 			Serial.println("no valid time, query from network");
 			if (!isConnected()) {
 				bool connected = connectToWifi(configuration->wifi_ssid, configuration->wifi_password);
@@ -194,22 +204,48 @@ public:
 
 			Serial.println("disconnect wifi");
 			disconnectWifi();
-		} else {
-			// if(!getLocalTime(&timeinfo)){
-			// 	Serial.println("Failed to obtain time");
-			// 	state = state_error;
-			// 	return;
-			// }
-
-			Serial.print("Time already valid: ");
-			Serial.print(timeinfo.tm_hour);
-			Serial.println(timeinfo.tm_min);
-			display.displayTime(timeinfo.tm_hour, timeinfo.tm_min);
-			Serial.println("Go to sleep now");
-			esp_sleep_enable_timer_wakeup(30*1000*1000);
-			Serial.flush();
-  			esp_deep_sleep_start();
 		}
+
+		bool networkSynchNeeded = (timeinfo.tm_hour == 12 && timeinfo.tm_min == 0 ||
+									timeinfo.tm_hour == 0 && timeinfo.tm_min == 0);
+		if (networkSynchNeeded) {
+			// Check FOTA and synch time
+			Serial.println("Network synch time reached, connect to network");
+			if (!isConnected()) {
+				bool connected = connectToWifi(configuration->wifi_ssid, configuration->wifi_password);
+				if (!connected) {
+					state = state_config;
+					return;
+				}
+			}
+			Serial.println("connected");
+
+			// Update network time
+			NetworkTime::init();
+
+			// Check for update
+			if(Fota::newVersionAvailable()) {
+				Serial.println("New version detected, start update...");
+				Fota::doFota();
+			} else {
+				Serial.println("Current version is the latest available");
+			}
+
+			Serial.println("disconnect wifi");
+			disconnectWifi();
+		}
+
+		// Display time
+		Serial.print("Time already valid: ");
+		Serial.print(timeinfo.tm_hour);
+		Serial.println(timeinfo.tm_min);
+		display.displayTime(timeinfo.tm_hour, timeinfo.tm_min);
+
+		// Go to deepsleep
+		Serial.println("Go to sleep now");
+		esp_sleep_enable_timer_wakeup(30*1000*1000);
+		Serial.flush();
+		esp_deep_sleep_start();
 	}
 
 	void stateError() {
