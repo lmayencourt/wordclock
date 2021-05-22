@@ -156,7 +156,7 @@ public:
 };
 
 //WiFiMulti Fota::WiFiMulti;
-String Fota::firmwareVersion = {"1.0"};
+String Fota::firmwareVersion = {"1.1"};
 const char * Fota::rootCACertificate = \
     "-----BEGIN CERTIFICATE-----\n"
     "MIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0BAQUFADBs\n"
