@@ -100,6 +100,11 @@ public:
   		pixels.clear();
   	}
 
+	void clearDots() {
+		for (int x=0; x<4; x++)
+			setPixel(0, 10+x, 0);
+	}
+
   	void setPixel(int x, int y, int brigthness) {
 		int corrected_x = x;
 		int corrected_y = DISPLAY_HEIGTH-1-y;
@@ -305,6 +310,24 @@ public:
 	void displayError() {
 		clear();
 		pixels.setPixelColor(0, pixels.Color(10, 0, 0));
+		display();
+	}
+
+	void displayMenu(int menu) {
+		clear();
+		if (menu == 0) {
+			displayFromLut(word, 2);
+		} else {
+			displayFromLut(hours, menu-1);
+		}
+		display();
+	}
+
+	void displayProgressBar(int value) {
+		clearDots();
+		if (value > 0 && value < 4) {
+			displayFromLut(dots, value);
+		}
 		display();
 	}
 };

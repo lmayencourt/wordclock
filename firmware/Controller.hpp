@@ -35,6 +35,12 @@ bool disconnectWifi() {
 	WiFi.mode(WIFI_OFF);
 }
 
+// BOOT bouton as input
+#define BOOT_GPIO 0
+bool bootButtonPushed() {
+	return !digitalRead(BOOT_GPIO);
+}
+
 ///////////////////////////////////////////////////
 // Display
 #include "Display.hpp"
@@ -87,9 +93,16 @@ enum state {
 	state_idle,
 	state_config,
 	state_clock,
+	state_userMenu,
 	state_error,
 	// state_life,
 } state;
+
+enum menu {
+	menu_clock,
+	menu_fota,
+	menu_cleanConfig,
+} menu;
 
 class Controller
 {
@@ -123,6 +136,8 @@ public:
 		// }
 
 		// Serial.println("Life: Initial population:"+count);
+
+		pinMode(BOOT_GPIO, INPUT);
 
 		// Set initial state
 		state = state_startup;
@@ -243,9 +258,66 @@ public:
 
 		// Go to deepsleep
 		Serial.println("Go to sleep now");
-		esp_sleep_enable_timer_wakeup(30*1000*1000);
+		esp_sleep_enable_timer_wakeup(15*1000*1000);
 		Serial.flush();
 		esp_deep_sleep_start();
+	}
+
+	void stateMenu() {
+		Serial.println("state: menu");
+
+		bool long_push = false;
+		bool mutli_push = false;
+		int pushed_duration = 0;
+
+		enum menu menu_select = menu_clock;
+		bool in_menu = true;
+
+		// Inform that we are in Menu
+		display.displayMenu(menu_select);
+
+		// Wait that the button goes down
+		while(bootButtonPushed() == true) {
+			delay(300);
+		}
+
+		while (in_menu) {
+			display.displayMenu(menu_select);
+
+			if (bootButtonPushed()) {
+				while(bootButtonPushed()) {
+					delay(100);
+					pushed_duration+=100;
+					if (pushed_duration > 100 && pushed_duration < 2000) {
+						display.displayProgressBar(pushed_duration/500);
+					}
+				}
+
+				if (pushed_duration >= 2000) {
+					// Long push: exit loop and execute menu action
+					Serial.println("long push");
+					in_menu = false;
+				} else {
+					// Short push: change menu
+					switch (menu_select) {
+						case menu_clock: menu_select = menu_fota; break;
+						case menu_fota: menu_select = menu_cleanConfig; break;
+						case menu_cleanConfig: menu_select = menu_clock; break;
+					}
+				}
+				pushed_duration = 0;
+			}
+
+			delay(150);
+		}
+
+		Serial.println("Menu action:");
+		switch (menu_select) {
+			case menu_fota:
+			case menu_clock: state = state_clock; break;
+			case menu_cleanConfig: state = state_config; break;
+			default: state = state_clock;
+		}
 	}
 
 	void stateError() {
@@ -260,11 +332,17 @@ public:
 		Serial.println("Current state: ");
 		Serial.println(state);
 
+		if (!digitalRead(BOOT_GPIO)) {
+			Serial.println("boot pushed!");
+			state = state_userMenu;
+		}
+
 		switch (state) {
 			case state_startup: stateStartup(); break;
 		// 	case state_idle: Serial.println("state: idle"); break;
 		 	case state_config: stateConfigure(); break;
 		 	case state_clock: stateCLock(); break;
+			case state_userMenu: stateMenu(); break;
 			case state_error: stateError(); break;
 		// 	case state_life:
 		// 		Serial.println("state: life");
