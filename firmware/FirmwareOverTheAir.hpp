@@ -16,8 +16,8 @@
 
 #include <time.h>
 
-#define FIRMWARE_URL "https://raw.githubusercontent.com/lmayencourt/wordclock/main/firmware.bin"
-#define FIRMWARE_VERSION_URL "https://raw.githubusercontent.com/lmayencourt/wordclock/main/version.txt"
+#define FIRMWARE_URL "https://raw.githubusercontent.com/lmayencourt/wordclock/released/firmware.bin"
+#define FIRMWARE_VERSION_URL "https://raw.githubusercontent.com/lmayencourt/wordclock/released/version.txt"
 
 class Fota {
 private:
