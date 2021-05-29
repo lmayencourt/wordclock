@@ -104,6 +104,9 @@ enum menu {
 	menu_cleanConfig,
 } menu;
 
+RTC_DATA_ATTR int displayed_hour;
+RTC_DATA_ATTR int displayed_min;
+
 class Controller
 {
 private:
@@ -113,8 +116,6 @@ public:
 		Serial.begin(115200);
 
 		Flash_fs::init();
-
-		display.init();
 
 		// pinMode(ledPin, OUTPUT);
 		// digitalWrite(ledPin, ledState);
@@ -167,12 +168,15 @@ public:
 			Serial.println("Wakeup from deep-sleep");
 			state = state_clock;
 			// return;
+		} else {
+			// Run init needed after power off
+			display.init();
+			// Check matrix display
+			display.test(DISPLAY_TESTS_TIME);
 		}
 
-		// Check matrix display
-		display.test(DISPLAY_TESTS_TIME);
-
 		// Check if configuration is valid
+		// TODO: put config in RTC_DATA and only read if startup is not deepsleep.
 		configuration = ConfigServer::readConfiguration();
 
 		if (!ConfigServer::configurationIsValid()) {
@@ -254,7 +258,10 @@ public:
 		Serial.print("Time already valid: ");
 		Serial.print(timeinfo.tm_hour);
 		Serial.println(timeinfo.tm_min);
-		display.displayTime(timeinfo.tm_hour, timeinfo.tm_min);
+		if (displayed_min != timeinfo.tm_min) {
+			displayed_min = timeinfo.tm_min;
+			display.displayTime(timeinfo.tm_hour, timeinfo.tm_min);
+		}
 
 		// Go to deepsleep
 		Serial.println("Go to sleep now");
