@@ -117,9 +117,9 @@ public:
 		}
 
 		if (brigthness <= MAX_BRIGTHNESS)
-			pixels.setPixelColor(pixel_num, pixels.Color(brigthness, brigthness, 0));
+			pixels.setPixelColor(pixel_num, pixels.Color(brigthness, brigthness, brigthness));
 		else
-			pixels.setPixelColor(pixel_num, pixels.Color(MAX_BRIGTHNESS, MAX_BRIGTHNESS, 0));
+			pixels.setPixelColor(pixel_num, pixels.Color(MAX_BRIGTHNESS, MAX_BRIGTHNESS, MAX_BRIGTHNESS));
 
   	}
 
