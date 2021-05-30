@@ -150,6 +150,8 @@ public:
 	}
 
 	static struct configuration_t* readConfiguration() {
+    listAllFiles();
+
     String tmp = Flash_fs::readFile(SPIFFS, CONFIG_FILE(wifi_ssid));
     Serial.print(">> ");
     Serial.print(CONFIG_FILE(wifi_ssid));
@@ -177,6 +179,29 @@ public:
     return &config;
 	}
 
+  static void listAllFiles(){
+    File root = SPIFFS.open("/");
+    File file = root.openNextFile();
+
+    Serial.println("Files on system: ");
+    while(file){
+        Serial.print("|- ");
+        Serial.println(file.name());
+        file = root.openNextFile();
+    }
+  }
+
+  static void clearConfig() {
+    File root = SPIFFS.open("/");
+    File file = root.openNextFile();
+
+    while(file){
+        Serial.print("Clearing ");
+        Serial.println(file.name());
+        SPIFFS.remove(file.name());
+        file = root.openNextFile();
+    }
+  }
 
 };
 

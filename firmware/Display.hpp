@@ -313,6 +313,19 @@ public:
 		display();
 	}
 
+	void displayStartup() {
+		clear();
+		pixels.setPixelColor(0, pixels.Color(0, 10, 0));
+		display();
+	}
+
+	void displayConfig() {
+		clear();
+		pixels.setPixelColor(0, pixels.Color(0, 0, 10));
+		pixels.setPixelColor(1, pixels.Color(0, 0, 10));
+		display();
+	}
+
 	void displayMenu(int menu) {
 		clear();
 		if (menu == 0) {

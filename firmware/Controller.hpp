@@ -10,12 +10,13 @@ bool isConnected() {
 
 bool connectToWifi(char* ssid, char* password) {
   // Connect to Wi-Fi
+  Serial.print("Connecting to WiFi: ");
+  Serial.print(ssid);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print("Connecting to WiFi: ");
-	Serial.print(ssid);
+	Serial.print("Connecting...");
     delay(1000);
     attempts++;
     if (attempts > 3) {
@@ -173,6 +174,7 @@ public:
 			display.init();
 			// Check matrix display
 			display.test(DISPLAY_TESTS_TIME);
+			display.displayStartup();
 		}
 
 		// Check if configuration is valid
@@ -191,6 +193,7 @@ public:
 	void stateConfigure() {
 		UpdateState("Config");
 
+		display.displayConfig();
 		delay(5000);
 
 		if (ConfigServer::configurationIsValid()) {
@@ -223,6 +226,8 @@ public:
 
 			Serial.println("disconnect wifi");
 			disconnectWifi();
+
+			getLocalTime(&timeinfo);
 		}
 
 		bool networkSynchNeeded = (timeinfo.tm_hour == 12 && timeinfo.tm_min == 0 ||
@@ -320,9 +325,31 @@ public:
 
 		Serial.println("Menu action:");
 		switch (menu_select) {
-			case menu_fota:
 			case menu_clock: state = state_clock; break;
-			case menu_cleanConfig: state = state_config; break;
+			case menu_fota:
+				if (!isConnected()) {
+					bool connected = connectToWifi(configuration->wifi_ssid, configuration->wifi_password);
+					if (!connected) {
+						state = state_error;
+						return;
+					}
+				}
+				Serial.println("connected");
+				// Check for update
+				if(Fota::newVersionAvailable()) {
+					Serial.println("New version detected, start update...");
+					Fota::doFota();
+				} else {
+					Serial.println("Current version is the latest available");
+				}
+
+				Serial.println("disconnect wifi");
+				disconnectWifi();
+				break;
+			case menu_cleanConfig:
+				ConfigServer::clearConfig();
+				state = state_startup;
+				break;
 			default: state = state_clock;
 		}
 	}
@@ -339,13 +366,17 @@ public:
 		Serial.println("Current state: ");
 		Serial.println(state);
 
+		// Startup must be executed before anything else
+		if (state == state_startup) {
+			stateStartup();
+		}
+
 		if (!digitalRead(BOOT_GPIO)) {
 			Serial.println("boot pushed!");
 			state = state_userMenu;
 		}
 
 		switch (state) {
-			case state_startup: stateStartup(); break;
 		// 	case state_idle: Serial.println("state: idle"); break;
 		 	case state_config: stateConfigure(); break;
 		 	case state_clock: stateCLock(); break;
