@@ -17,23 +17,65 @@
 #define CONFIG_FILE(arg) ("/config_" #arg ".txt")
 #define CONFIG_ELEM(arg) {CONFIG_INPUT(arg), CONFIG_FILE(arg)}
 
+typedef struct config_time {
+    int hour;
+    int min;
+} config_time_t;
+
+typedef struct night_mode_times {
+  bool is_valide;
+  config_time_t start;
+  config_time_t end;
+} night_mode_times_t;
+
 struct configuration_t {
-      char wifi_ssid[40];
-      char wifi_password[40];
-      bool summer_time;
-      char city[20];
-    };
+    char wifi_ssid[40];
+    char wifi_password[40];
+    bool summer_time;
+    char city[20];
+    char night_mode_start[10];
+    char night_mode_end[10];
+    night_mode_times_t night_mode;
+};
 
 const char* config_elements[][2] = {
     CONFIG_ELEM(wifi_ssid),
     CONFIG_ELEM(wifi_password),
     CONFIG_ELEM(summer_time),
     CONFIG_ELEM(city),
+    CONFIG_ELEM(night_mode_start),
+    CONFIG_ELEM(night_mode_end),
 };
 
   // HTML web page to handle 3 input fields (inputString, inputInt, inputFloat)
   const char index_html[] PROGMEM = R"rawliteral(
-  <!DOCTYPE HTML><html><head>
+<!DOCTYPE HTML>
+  <html>
+  <style>
+    .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+    }
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+
+        /* Position the tooltip */
+        position: absolute;
+        z-index: 1;
+    }
+
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+    }
+  </style>
+  <head>
     <title>Word-Clock</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>
@@ -41,7 +83,8 @@ const char* config_elements[][2] = {
         alert("Saved value to ESP SPIFFS");
         setTimeout(function(){ document.location.reload(false); }, 500);   
       }
-    </script></head><body>
+    </script></head>
+  <body>
     <h1>Word-Clock configuration</h1>
     <form action="/get" target="hidden-form">
       Wifi SSID (name): <input type="text" name="input_wifi_ssid"><br><br>
@@ -52,10 +95,21 @@ const char* config_elements[][2] = {
         <option value="no">no</option>
       </select><br><br>
       City (for weather forcast): <input type="text" name="input_city"><br><br>
+      Night-mode starts at: <input type="text" name="input_night_mode_start">
+        <div class="tooltip">&#9432;
+          <span class="tooltiptext">E.g. 12:00 <br>
+          Must be between 12:00 and 23:59</span>
+       </div><br><br>
+      Night-mode ends at: <input type="text" name="input_night_mode_end">
+      <div class="tooltip">&#9432;
+          <span class="tooltiptext">E.g. 08:00 <br>
+          Must be between 00:00 and 12:00</span>
+       </div><br><br>
       <input type="submit" value="Submit" onclick="submitMessage()">
     </form><br>
     <iframe style="display:none" name="hidden-form"></iframe>
-  </body></html>)rawliteral";
+  </body>
+</html>)rawliteral";
 
   /* Same inputs form is used for other format.
    * Value is stored in char* and must be converted back with:
@@ -71,6 +125,37 @@ private:
 
   static void notFound(AsyncWebServerRequest *request) {
     request->send(404, "text/plain", "Not found");
+  }
+
+  static bool convertCharToTime(char* in, int* h, int* m) {
+    if (strlen(in) != 5) {
+        return false;
+    }
+
+    char hour_c[3], min_c[3];
+    strncpy(hour_c, in, 2);
+    strncpy(min_c, &in[3], 2);
+    *h = atoi(hour_c);
+    *m = atoi(min_c);
+
+    if (*h < 0 || *h > 23) {
+        return false;
+    }
+    if (*m < 0 || *m > 59) {
+        return false;
+    }
+    return true;
+}
+
+  static void nightModeConvert(void) {
+      config.night_mode.is_valide = convertCharToTime(config.night_mode_start, &config.night_mode.start.hour, &config.night_mode.start.min);
+      config.night_mode.is_valide &= convertCharToTime(config.night_mode_end, &config.night_mode.end.hour, &config.night_mode.end.min);
+      if (config.night_mode.end.hour > 12) {
+          config.night_mode.is_valide = false;
+      }
+      if (config.night_mode.start.hour < 12) {
+          config.night_mode.is_valide = false;
+      }
   }
 
 public:
@@ -146,6 +231,20 @@ public:
     Serial.print(CONFIG_FILE(city));
 		tmp.toCharArray(config.city, sizeof(config.city));
 		Serial.println(config.city);
+
+    tmp = Flash_fs::readFile(SPIFFS, CONFIG_FILE(night_mode_start));
+		Serial.print(">> ");
+    Serial.print(CONFIG_FILE(night_mode_start));
+		tmp.toCharArray(config.night_mode_start, sizeof(config.night_mode_start));
+		Serial.println(config.night_mode_start);
+    tmp = Flash_fs::readFile(SPIFFS, CONFIG_FILE(night_mode_end));
+		Serial.print(">> ");
+    Serial.print(CONFIG_FILE(night_mode_end));
+		tmp.toCharArray(config.night_mode_end, sizeof(config.night_mode_end));
+		Serial.println(config.night_mode_end);
+
+    // Populate the night mode start and end times
+    nightModeConvert();
 
     return &config;
 	}

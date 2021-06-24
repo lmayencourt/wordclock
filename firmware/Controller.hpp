@@ -259,13 +259,45 @@ public:
 			disconnectWifi();
 		}
 
-		// Display time
-		Serial.print("Time already valid: ");
+		bool in_night_mode = false;
+		if (configuration->night_mode.is_valide) {
+			if (timeinfo.tm_hour > configuration->night_mode.start.hour) {
+				in_night_mode = true;
+			} else if (timeinfo.tm_hour == configuration->night_mode.start.hour) {
+				if (timeinfo.tm_min >= configuration->night_mode.start.min) {
+					in_night_mode = true;
+				}
+			}
+
+			if (timeinfo.tm_hour < configuration->night_mode.end.hour) {
+				in_night_mode = true;
+			} else if (timeinfo.tm_hour == configuration->night_mode.end.hour) {
+				if (timeinfo.tm_min <= configuration->night_mode.end.min) {
+					in_night_mode = true;
+				}
+			}
+		} else {
+			Serial.println("Night mode is not set");
+		}
+
+		Serial.print("Time is already  valid: ");
 		Serial.print(timeinfo.tm_hour);
 		Serial.println(timeinfo.tm_min);
-		if (displayed_min != timeinfo.tm_min) {
-			displayed_min = timeinfo.tm_min;
-			display.displayTime(timeinfo.tm_hour, timeinfo.tm_min);
+		if (in_night_mode) {
+			Serial.print("Night from ");
+			Serial.print(configuration->night_mode.start.hour);
+			Serial.print(configuration->night_mode.start.min);
+			Serial.print(" to ");
+			Serial.print(configuration->night_mode.end.hour);
+			Serial.println(configuration->night_mode.end.min);
+			display.clear();
+			display.display();
+		} else {
+			// Display time
+			if (displayed_min != timeinfo.tm_min) {
+				displayed_min = timeinfo.tm_min;
+				display.displayTime(timeinfo.tm_hour, timeinfo.tm_min);
+			}
 		}
 
 		// Go to deepsleep

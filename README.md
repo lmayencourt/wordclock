@@ -6,6 +6,7 @@ The clock get the time from the Internet. For this to work, a wifi network is ne
 
 ## Configuration
 Connect to "WordClock" wifi and go to [http://192.168.4.1](http://192.168.4.1) in a browser. Enter your wifi name (SSID) and your wifi password.
+If you want the clock to be off during the night, set the "Night mode" start and end times.
 
 > **Note:** You may need to restart the clock by pressing the "EN" button.
 
