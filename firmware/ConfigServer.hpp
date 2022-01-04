@@ -175,15 +175,21 @@ public:
   // Send a GET request to <ESP_IP>/get?inputString=<inputMessage>
     config_server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
       String inputMessage;
+      //List all parameters (for debug)
+      int args = request->args();
+      for(int i=0;i<args;i++){
+        Serial.printf("ARG[%s]: %s\n", request->argName(i).c_str(), request->arg(i).c_str());
+      }
       size_t config_nbr = sizeof(config_elements) / sizeof(const char*[2]);
       for (size_t i=0; i<config_nbr; i++) {
         // GET inputString value on <ESP_IP>/get?inputString=<inputMessage>
+        Serial.printf("looking for %s: \n", config_elements[i][0]);
         if (request->hasParam(config_elements[i][0])) {
           inputMessage = request->getParam(config_elements[i][0])->value();
           Flash_fs::writeFile(SPIFFS, config_elements[i][1], inputMessage.c_str());
         }
         else {
-          inputMessage = "No message sent";
+          inputMessage = "Not found";
         }
         Serial.println(inputMessage);
       }
@@ -198,6 +204,7 @@ public:
   }
 
 	static bool configurationIsValid() {
+    Serial.printf("Checking config for ssid: %s, pwd: %s\n", config.wifi_ssid, config.wifi_password);
 		if (config.wifi_ssid[0] != '\0' && config.wifi_password[0] != '\0') {
 			return true;
 		} else {
