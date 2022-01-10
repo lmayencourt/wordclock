@@ -182,9 +182,12 @@ public:
 		configuration = ConfigServer::readConfiguration();
 
 		if (!ConfigServer::configurationIsValid()) {
+			Serial.println("Config not valid, start config-server");
 			ConfigServer::init();
 			state = state_config;
 		} else {
+			Serial.printf("Config valid, start clock with dialect %d\n", configuration->dialect);
+			display.setDialect(configuration->dialect);
 			state = state_clock;
 		}
 
@@ -196,6 +199,7 @@ public:
 		display.displayConfig();
 		delay(5000);
 
+		configuration = ConfigServer::readConfiguration();
 		if (ConfigServer::configurationIsValid()) {
 			ConfigServer::disconnect();
 			state = state_clock;
