@@ -186,7 +186,8 @@ public:
 			ConfigServer::init();
 			state = state_config;
 		} else {
-			Serial.println("Config valid, start clock");
+			Serial.printf("Config valid, start clock with dialect %d\n", configuration->dialect);
+			display.setDialect(configuration->dialect);
 			state = state_clock;
 		}
 

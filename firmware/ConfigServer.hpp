@@ -28,6 +28,17 @@ typedef struct night_mode_times {
   config_time_t end;
 } night_mode_times_t;
 
+typedef enum display_dialect {
+  Bern,
+  Wallis,
+  Nbr_of_supported_dialect
+} display_dialect;
+
+const char* dialect_string[2] {
+  "Bärn",
+  "Wallis",
+};
+
 struct configuration_t {
     char wifi_ssid[40];
     char wifi_password[40];
@@ -36,6 +47,7 @@ struct configuration_t {
     char night_mode_start[10];
     char night_mode_end[10];
     night_mode_times_t night_mode;
+    display_dialect dialect;
 };
 
 const char* config_elements[][2] = {
@@ -45,6 +57,7 @@ const char* config_elements[][2] = {
     CONFIG_ELEM(city),
     CONFIG_ELEM(night_mode_start),
     CONFIG_ELEM(night_mode_end),
+    CONFIG_ELEM(dialect),
 };
 
   // HTML web page to handle 3 input fields (inputString, inputInt, inputFloat)
@@ -90,9 +103,14 @@ const char* config_elements[][2] = {
       Wifi SSID (name): <input type="text" name="input_wifi_ssid"><br><br>
       Wifi password: <input type="text" name="input_wifi_password"><br><br>
       Summer/winter time:
-      <select name="Summer time" id="summer_time">
+      <select name="summer_time" id="summer_time">
         <option value="yes">yes</option>
-        <option value="no">no</option>
+        <option value="no">no</option>ß
+      </select><br><br>
+      Clock dialect:
+      <select name="input_dialect">
+        <option value="0">Bärn</option>
+        <option value="1">Wallis</option>
       </select><br><br>
       City (for weather forcast): <input type="text" name="input_city"><br><br>
       Night-mode starts at: <input type="text" name="input_night_mode_start">
@@ -249,6 +267,16 @@ public:
     Serial.print(CONFIG_FILE(night_mode_end));
 		tmp.toCharArray(config.night_mode_end, sizeof(config.night_mode_end));
 		Serial.println(config.night_mode_end);
+
+    tmp = Flash_fs::readFile(SPIFFS, CONFIG_FILE(dialect));
+    Serial.print(">> ");
+    Serial.print(CONFIG_FILE(dialect));
+    switch(tmp.toInt()) {
+      case Bern: config.dialect = Bern; break;
+      case Wallis: config.dialect = Wallis; break;
+      default: config.dialect = Bern;
+    }
+		Serial.println(dialect_string[config.dialect]);
 
     // Populate the night mode start and end times
     nightModeConvert();

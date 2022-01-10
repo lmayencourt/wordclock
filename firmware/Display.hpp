@@ -29,9 +29,12 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 class Display {
 private:
 
+	int dialect;
+
 	int grid[DISPLAY_HEIGTH][DISPLAY_WIDTH];
 
-	int hours[12][3] = {
+	int hours[2][12][3] = {
+	{	// Bärn
 		// start_x, start_y, length
 		{0, 4, 3}, // eis
 		{3, 4, 4}, // zwöi
@@ -45,14 +48,30 @@ private:
 		{0, 8, 4}, // zäni
 		{7, 8, 4}, // eufi
 		{0, 9, 6}, // zwöufi 
-	};
+	},
+	{	// Wallis
+		// start_x, start_y, length
+		{0, 4, 3}, // eis
+		{3, 4, 4}, // zwei
+		{8, 4, 3}, // dri
+		{0, 5, 5}, // vieri
+		{7, 6, 4}, // füfi
+		{0, 6, 7}, // sägschi
+		{6, 5, 5}, // sibni
+		{0, 7, 5}, // achti
+		{5, 7, 4}, // nini
+		{0, 8, 5}, // zähni
+		{7, 8, 4}, // elfi
+		{0, 9, 6}, // zwelfi
+	}};
 
 	#define MIN_5 1
 	#define MIN_10 2
 	#define MIN_15 3
 	#define MIN_20 4
 	#define MIN_30 5
-	int minutes[6][3] = {
+	int minutes[2][6][3] = {
+	{	// Bärn
 		// start_x, start_y, length
 		{8, 9, 3}, // uhr
 		{8, 0, 3}, // fÜf
@@ -60,20 +79,42 @@ private:
 		{0, 1, 6}, // viertu
 		{0, 2, 6}, // zwänzg
 		{3, 3, 5}, // haubi
-	};
+	},
+	{	// Wallis
+		// start_x, start_y, length
+		{8, 9, 3}, // uhr
+		{8, 0, 3}, // fÜf
+		{8, 1, 3}, // zäh
+		{0, 1, 7}, // viertel
+		{0, 2, 6}, // zwenzg
+		{3, 3, 5}, // halbi
+	}};
 
-	int preposition[2][3] = {
+	int preposition[2][2][3] = {
+	{	// Bärn
 		// start_x, start_y, length
 		{0, 3, 2}, // ab
 		{8, 2, 3}, // vor
-	};
+	},
+	{	// Wallis
+		// start_x, start_y, length
+		{0, 3, 2}, // ab
+		{8, 2, 3}, // vor
+	}};
 
-	int word[3][3] = {
+	int word[2][3][3] = {
+	{	// Bärn
 		// start_x, start_y, length
 		{0, 0, 2}, // es
 		{3, 0, 4}, // isch
 		{8, 9, 3}, // uhr
-	};
+	},
+	{	// Wallis
+		// start_x, start_y, length
+		{0, 0, 2}, // äs
+		{3, 0, 4}, // isch
+		{8, 9, 3}, // uhr
+	}};
 
 	int dots[4][3] = {
 		// start_x, start_y, length
@@ -90,7 +131,12 @@ public:
 
 		pixels.clear();
 		pixels.show();
+		dialect = 0;
   }
+
+	void setDialect(int d) {
+		dialect = d;
+	}
 
   	void display() {
   		pixels.show();
@@ -175,7 +221,7 @@ public:
 			// display all number
 			clear();
 			for (int i=0; i<12; i++) {
-				displayFromLut(hours, i);
+				displayFromLut(hours[dialect], i);
 				display();
 				delay(750);
 				clear();
@@ -183,7 +229,7 @@ public:
 			// display all minutes
 			clear();
 			for (int i=0; i<6; i++) {
-				displayFromLut(minutes, i);
+				displayFromLut(minutes[dialect], i);
 				display();
 				delay(750);
 				clear();
@@ -191,7 +237,7 @@ public:
 			// display all preposition
 			clear();
 			for (int i=0; i<2; i++) {
-				displayFromLut(preposition, i);
+				displayFromLut(preposition[dialect], i);
 				display();
 				delay(750);
 				clear();
@@ -199,7 +245,7 @@ public:
 			// display all word
 			clear();
 			for (int i=0; i<3; i++) {
-				displayFromLut(word, i);
+				displayFromLut(word[dialect], i);
 				display();
 				delay(750);
 				clear();
@@ -257,47 +303,47 @@ public:
 		}
 		int hour_idx = hour_to_display-1;
 		Serial.printf("--> h: %d, h_idx: %d | ", hour_to_display, hour_idx);
-		displayFromLut(hours, hour_idx);
+		displayFromLut(hours[dialect], hour_idx);
 
 		// Display minutes
 		int minutes_word=0;
 		if (min < 5) {
 			// Es isch
-			displayFromLut(word, 0);
-			displayFromLut(word, 1);
+			displayFromLut(word[dialect], 0);
+			displayFromLut(word[dialect], 1);
 			// uhr
 			minutes_word = min/5;
 			Serial.printf(" <5 id: %d\n\r", minutes_word);
-			displayFromLut(minutes, minutes_word);
+			displayFromLut(minutes[dialect], minutes_word);
 		}else if (min < 25) {
 			// uhr, füf, zää, zwanzg ab
 			minutes_word = min/5;
 			Serial.printf(" <25 id: %d\n\r", minutes_word);
-			displayFromLut(minutes, minutes_word);
-			displayFromLut(preposition, 0);
+			displayFromLut(minutes[dialect], minutes_word);
+			displayFromLut(preposition[dialect], 0);
 		} else if (min < 30) {
 			// füf vor halbi h+1
 			Serial.printf(" <30\n\r");
-			displayFromLut(minutes, MIN_5);
-			displayFromLut(preposition, 1);
-			displayFromLut(minutes,MIN_30);
+			displayFromLut(minutes[dialect], MIN_5);
+			displayFromLut(preposition[dialect], 1);
+			displayFromLut(minutes[dialect], MIN_30);
 
 		} else if (min < 35) {
 			// halbi h+1
 			Serial.printf(" <35\n\r");
-			displayFromLut(minutes,MIN_30);
+			displayFromLut(minutes[dialect], MIN_30);
 		} else if (min < 40) {
 			// füf ab halbi h+1
 			Serial.printf(" <40\n\r");
-			displayFromLut(minutes, MIN_5);
-			displayFromLut(preposition, 0);
-			displayFromLut(minutes,MIN_30);
+			displayFromLut(minutes[dialect], MIN_5);
+			displayFromLut(preposition[dialect], 0);
+			displayFromLut(minutes[dialect], MIN_30);
 		} else {
 			// füf, zää, zwanzg vor
 			minutes_word = (60 - min-1)/5 +1;
 			Serial.printf(" >40 id: %d\n\r", minutes_word);
-			displayFromLut(minutes, minutes_word);
-			displayFromLut(preposition, 1);
+			displayFromLut(minutes[dialect], minutes_word);
+			displayFromLut(preposition[dialect], 1);
 		}
 		
 		// display inter'minutes
@@ -329,9 +375,9 @@ public:
 	void displayMenu(int menu) {
 		clear();
 		if (menu == 0) {
-			displayFromLut(word, 2);
+			displayFromLut(word[dialect], 2);
 		} else {
-			displayFromLut(hours, menu-1);
+			displayFromLut(hours[dialect], menu-1);
 		}
 		display();
 	}
