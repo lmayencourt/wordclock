@@ -14,7 +14,7 @@ If you want the clock to be off during the night, set the "Night mode" start and
 
 ## Menu
 
-To enter the menu, press the "BOOT" button until the "urh" is displayed (it may take up to 15 secs to reach the menu). A single push of the "BOOT" button changes the menu, a long push (< 2 secs) validate the menu selection and trigger the associated actions:
+To enter the menu, press the "BOOT" button until the "uhr" is displayed (it may take up to 15 secs to reach the menu). A single push of the "BOOT" button changes the menu, a long push (< 2 secs) validate the menu selection and trigger the associated actions:
  * uhr: Go back to time display.
  * eis: Check if a new version of the firmware is available and download it.
  * zwöi: Erase the current configuration and switch back to configuration mode.
