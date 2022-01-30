@@ -1,0 +1,2 @@
+
+gcc AllTest.c GetStartedTest.c unity/*.c -I unity -DUNITY_FIXTURE_NO_EXTRAS -o test
