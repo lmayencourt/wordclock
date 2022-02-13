@@ -1,5 +1,8 @@
+from distutils.log import ERROR
+from logging import CRITICAL, WARNING
 import dlb.fs
 import dlb.ex
+import dlb.di
 import dlb_contrib.gcc
 
 from typing import List, Union
@@ -18,10 +21,13 @@ class UnitTest(dlb.ex.Tool):
     test_binary = dlb.ex.input.RegularFile()
 
     async def redo(self, result, context):
-        await context.execute_helper(
-            self.EXECUTABLE,
-            cwd='dist/test/'
-        )
+        try:
+            await context.execute_helper(
+                self.EXECUTABLE,
+                cwd='dist/test/'
+            )
+        except:
+            dlb.di.inform("unit-test execution failed", level=CRITICAL)
 
 # compile and link application written in C
 with dlb.ex.Context():
@@ -71,5 +77,6 @@ with dlb.ex.Context():
         UnitTest(
             test_binary=test_binary,
         ).start()
+
 
 dlb.di.inform('finished successfully')
