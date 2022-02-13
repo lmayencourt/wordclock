@@ -2,6 +2,8 @@
 
 #include "stdio.h"
 
+// TODO: Make this runtime configurable
+
 const uint8_t index_to_hours_lut[2][12][3] = {
 {	// Bärn
     // start_x, start_y, length
@@ -34,6 +36,43 @@ const uint8_t index_to_hours_lut[2][12][3] = {
     {0, 9, 6}, // zwelfi
 }};
 
+#define MIN_5 1
+#define MIN_10 2
+#define MIN_15 3
+#define MIN_20 4
+#define MIN_30 5
+const uint8_t index_to_minutes_lut[2][6][3] = {
+{	// Bärn
+    // start_x, start_y, length
+    {8, 9, 3}, // uhr
+    {8, 0, 3}, // fÜf
+    {8, 1, 3}, // zää
+    {0, 1, 6}, // viertu
+    {0, 2, 6}, // zwänzg
+    {3, 3, 5}, // haubi
+},
+{	// Wallis
+    // start_x, start_y, length
+    {8, 9, 3}, // uhr
+    {8, 0, 3}, // fÜf
+    {8, 1, 3}, // zäh
+    {0, 1, 7}, // viertel
+    {0, 2, 6}, // zwenzg
+    {3, 3, 5}, // halbi
+}};
+
+const uint8_t index_to_preposition_lut[2][2][3] = {
+{	// Bärn
+    // start_x, start_y, length
+    {0, 3, 2}, // ab
+    {8, 2, 3}, // vor
+},
+{	// Wallis
+    // start_x, start_y, length
+    {0, 3, 2}, // ab
+    {8, 2, 3}, // vor
+}};
+
 const uint8_t index_to_word_lut[2][3][3] = {
 {	// Bärn
     // start_x, start_y, length
@@ -51,13 +90,18 @@ const uint8_t index_to_word_lut[2][3][3] = {
 void LedMatrixDisplay::init(LedMatrixInterface *ledMatrix, uint8_t pixel_nbr) {
     this->ledMatrix = ledMatrix;
     this->pixel_nbr = pixel_nbr;
+    this->dialect = DIALECT_BARN;
 }
 
-void LedMatrixDisplay::turnOn(uint8_t position, uint32_t color) {
+void LedMatrixDisplay::setDialect(DisplayDialect_t dialect) {
+    this->dialect = dialect;
+}
+
+void LedMatrixDisplay::turnOn(uint8_t position, DisplayColor_t color) {
     this->ledMatrix->setPixelColor(position, color);
 }
 
-void LedMatrixDisplay::turnOnAll(uint32_t color) {
+void LedMatrixDisplay::turnOnAll(DisplayColor_t color) {
     for (int i=0; i<this->pixel_nbr; i++) {
         this->ledMatrix->setPixelColor(i, color);
     }
@@ -88,14 +132,60 @@ void LedMatrixDisplay::displayState(uint8_t state) {
     }
 }
 
-void LedMatrixDisplay::displayTime(uint8_t hour, uint8_t minute) {
+void LedMatrixDisplay::displayTime(uint8_t hour, uint8_t minutes) {
     this->ledMatrix->clear();
-    this->displayFromLut(index_to_word_lut[0], 0, WHITE);
-    this->displayFromLut(index_to_word_lut[0], 1, WHITE);
-    this->displayFromLut(index_to_word_lut[0], 2, WHITE);
 
-    uint8_t hour_idx = hour -1;
-    this->displayFromLut(index_to_hours_lut[0], hour_idx, WHITE);
+    // Display hour
+    int hour_to_display = hour;
+    if (minutes >= 25) {
+        hour_to_display = hour+1;
+    }
+    // 24 -> 12
+    if (hour_to_display > 12) {
+        hour_to_display = hour_to_display - 12 ;
+    }
+    // midnight
+    if (hour_to_display == 0) {
+        hour_to_display = 12;
+    }
+    int hour_idx = hour_to_display-1;
+
+    this->displayFromLut(index_to_hours_lut[this->dialect], hour_idx, WHITE);
+
+    // Display minutes
+    int minutes_word=0;
+    if (minutes < 5) {
+        // Es isch
+        displayFromLut(index_to_word_lut[this->dialect], 0, WHITE);
+        displayFromLut(index_to_word_lut[this->dialect], 1, WHITE);
+        // uhr
+        minutes_word = minutes/5;
+        displayFromLut(index_to_minutes_lut[this->dialect], minutes_word, WHITE);
+    }else if (minutes < 25) {
+        // uhr, füf, zää, zwanzg ab
+        minutes_word = minutes/5;
+        displayFromLut(index_to_minutes_lut[this->dialect], minutes_word, WHITE);
+        displayFromLut(index_to_preposition_lut[this->dialect], 0, WHITE);
+    } else if (minutes < 30) {
+        // füf vor halbi h+1
+        displayFromLut(index_to_minutes_lut[this->dialect], MIN_5, WHITE);
+        displayFromLut(index_to_preposition_lut[this->dialect], 1, WHITE);
+        displayFromLut(index_to_minutes_lut[this->dialect], MIN_30, WHITE);
+
+    } else if (minutes < 35) {
+        // halbi h+1
+        displayFromLut(index_to_minutes_lut[this->dialect], MIN_30, WHITE);
+    } else if (minutes < 40) {
+        // füf ab halbi h+1
+        displayFromLut(index_to_minutes_lut[this->dialect], MIN_5, WHITE);
+        displayFromLut(index_to_preposition_lut[this->dialect], 0, WHITE);
+        displayFromLut(index_to_minutes_lut[this->dialect], MIN_30, WHITE);
+    } else {
+        // füf, zää, zwanzg vor
+        minutes_word = (60 - minutes-1)/5 +1;
+        displayFromLut(index_to_minutes_lut[this->dialect], minutes_word, WHITE);
+        displayFromLut(index_to_preposition_lut[this->dialect], 1, WHITE);
+    }
 }
 
 void LedMatrixDisplay::displayStartup() {
@@ -114,7 +204,7 @@ void LedMatrixDisplay::displayError() {
     }
 }
 
-void LedMatrixDisplay::setPixel(uint8_t x, uint8_t y, uint32_t color) {
+void LedMatrixDisplay::setPixel(uint8_t x, uint8_t y, DisplayColor_t color) {
     uint8_t corrected_x = x;
     uint8_t corrected_y = DISPLAY_HEIGTH-1-y;
     uint8_t pixel_num = 0;
@@ -130,12 +220,10 @@ void LedMatrixDisplay::setPixel(uint8_t x, uint8_t y, uint32_t color) {
         pixel_num = x;
     }
 
-    // printf("setting x %d, y %d-> %d\n", x, y, pixel_num);
     this->ledMatrix->setPixelColor(pixel_num,color);
 }
 
-void LedMatrixDisplay::displayFromLut(const uint8_t lut[][3], uint8_t ele, uint32_t color) {
-    // printf("display from lut %d: %d, %d, %d\n", ele, lut[ele][0], lut[ele][1], lut[ele][2]);
+void LedMatrixDisplay::displayFromLut(const uint8_t lut[][3], uint8_t ele, DisplayColor_t color) {
     for (int x=0; x<lut[ele][2]; x++) {
         this->setPixel(lut[ele][0]+x, lut[ele][1], color);
     }

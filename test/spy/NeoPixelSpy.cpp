@@ -4,7 +4,9 @@
 #include "string.h"
 
 // every 2 lines are reverted due to the matrix wirering
-const char *letters_on_the_face = "...."
+const char *letters_on_the_face[2] = {
+                            {
+                                "...."
                                 "RHUMAIFUOWZ"
                                 "ZANIERBEUFI"
                                 "LEINUNITHCA"
@@ -14,7 +16,22 @@ const char *letters_on_the_face = "...."
                                 "MPEIBUAHOBA"
                                 "ZWANZGSIVOR"
                                 "AAZFBUTREIV"
-                                "ESKISCHAFUF";
+                                "ESKISCHAFUF"
+                            },
+                            {
+                                "...."
+                                "RHUMAIFLEWZ"
+                                "ZAHNIRBELFI"
+                                "LEININITHCA"
+                                "SAGSCHIFUFI"
+                                "INBISXIREIV"
+                                "EISZWEISDRI"
+                                "MPTIBLAHOBA"
+                                "ZWENZGSIVOR"
+                                "HAZFLETREIV"
+                                "ASKISCHAFUF"
+                            }
+                        };
 
 void NeoPixelSpy::init(uint8_t pixel_nbr) {
     this->pixel_nbr = pixel_nbr;
@@ -61,9 +78,13 @@ char* NeoPixelSpy::toString() {
             // printf("testing %d, x %d, y %d\n", pixel_idx, x, y);
             if (this->pixels[pixel_idx] != 0) {
                 // printf("pixel %d x %d, y %d is set\n",pixel_idx, x, y);
-                strncat(this->pixelToString, &letters_on_the_face[pixel_idx], 1);
+                strncat(this->pixelToString, &letters_on_the_face[this->dialect][pixel_idx], 1);
             }
         }
     }
     return this->pixelToString;
+}
+
+void NeoPixelSpy::setDialect(uint8_t dialect){
+    this->dialect = dialect;
 }

@@ -17,9 +17,11 @@ public:
     uint32_t getPixel(uint8_t pixel_num);
     bool outOfBoundDetected();
     char* toString();
+    void setDialect(uint8_t dialect);
 private:
     uint32_t pixels[MAX_NBR_OF_PIXEL];
     uint8_t pixel_nbr;
+    uint8_t dialect;
 
     char pixelToString[MAX_NBR_OF_PIXEL];
 };

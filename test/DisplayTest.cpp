@@ -28,6 +28,8 @@ TEST_GROUP_RUNNER(Display) {
     RUN_TEST_CASE(Display, DisplayConfigState);
     RUN_TEST_CASE(Display, DisplayTimeNoon);
     RUN_TEST_CASE(Display, DisplayAllHours);
+    RUN_TEST_CASE(Display, DisplayEveryFiveMinutes);
+    RUN_TEST_CASE(Display, ChangeDialect);
 }
 
 TEST_GROUP(Display);
@@ -39,6 +41,12 @@ void checkRangeIs(uint8_t start, uint8_t nbr, uint32_t value) {
         sprintf(error_msg, "idx %d", i);
         TEST_ASSERT_EQUAL_HEX32_MESSAGE(value, neopixel.getPixel(i), error_msg);
     }
+}
+
+void checkGivenTimeDisplayedAsExpected(uint8_t hour, uint8_t minutes, const char *expected_text, size_t expected_text_size, char *displayed_text) {
+    memset(error_msg, 0, sizeof(error_msg));
+    sprintf(error_msg, "%d:%d display %s", hour, minutes, displayed_text);
+    TEST_ASSERT_EQUAL_CHAR_ARRAY_MESSAGE(expected_text, displayed_text, expected_text_size, error_msg);
 }
 
 TEST_SETUP(Display) {
@@ -126,16 +134,15 @@ TEST(Display, DisplayError) {
 
 TEST(Display, DisplayTimeNoon) {
     uint8_t hour = 12;
-    uint8_t minute = 0;
+    uint8_t minutes = 0;
     const char *expected_string = "ESISCHZWOIUHR";
-    the_display.displayTime(hour, minute);
+    the_display.displayTime(hour, minutes);
     checkRangeIs(4, 3, WHITE);
-    sprintf(error_msg, "expected: %s", neopixel.toString());
-    TEST_ASSERT_EQUAL_CHAR_ARRAY_MESSAGE(expected_string, neopixel.toString(), sizeof(expected_string), error_msg);
+    checkGivenTimeDisplayedAsExpected(hour, minutes, &expected_string[0], sizeof(expected_string), neopixel.toString());
 }
 
 TEST(Display, DisplayAllHours) {
-    uint8_t minute = 0;
+    uint8_t minutes = 0;
     const char expected_string[12][20] = {
         "ESISCHEISUHR",
         "ESISCHZWOIUHR",
@@ -151,8 +158,40 @@ TEST(Display, DisplayAllHours) {
         "ESISCHZWOUFIUHR",
     };
     for (uint8_t hour=1; hour<=12; hour++) {
-        the_display.displayTime(hour, minute);
-        sprintf(error_msg, "hour %d: %s", hour, neopixel.toString());
-        TEST_ASSERT_EQUAL_CHAR_ARRAY_MESSAGE(expected_string[hour-1], neopixel.toString(), sizeof(expected_string[hour-1]), error_msg);
+        the_display.displayTime(hour, minutes);
+        checkGivenTimeDisplayedAsExpected(hour, minutes, &expected_string[hour-1][0], sizeof(expected_string[hour-1]), neopixel.toString());
     }
+}
+
+TEST(Display, DisplayEveryFiveMinutes) {
+    uint8_t hour = 1;
+    const char expected_string[12][20] = {
+        "ESISCHEISUHR",
+        "FUFABEIS",
+        "ZAAABEIS",
+        "VIERTUABEIS",
+        "ZWANZGABEIS",
+        "FUFVORHAUBIZWOI",
+        "HAUBIZWOI",
+        "FUFABHAUBIZWOI",
+        "ZWANZGVORZWOI",
+        "VIERTUVORZWOI",
+        "ZAAVORZWOI",
+        "FUFVORZWOI",
+    };
+    for (uint8_t minutes=0; minutes<=55; minutes=minutes+5) {
+        the_display.displayTime(hour, minutes);
+        uint8_t expected_string_idx = minutes/5;
+        checkGivenTimeDisplayedAsExpected(hour, minutes, &expected_string[expected_string_idx][0], sizeof(expected_string[expected_string_idx]), neopixel.toString());
+    }
+}
+
+TEST(Display, ChangeDialect) {
+    uint8_t hour = 11;
+    uint8_t minutes = 45;
+    const char expected_string[] = "VIERTELVORZWELFI";
+    neopixel.setDialect(DIALECT_WALLIS);
+    the_display.setDialect(DIALECT_WALLIS);
+    the_display.displayTime(hour, minutes);
+    checkGivenTimeDisplayedAsExpected(hour, minutes, &expected_string[0], sizeof(expected_string), neopixel.toString());
 }
