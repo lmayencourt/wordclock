@@ -103,11 +103,13 @@ with dlb.ex.Context():
     build_output_directory = dlb.fs.Path('build/')
     distribution_directory = dlb.fs.Path('dist/test/')
 
+    parallel_build_redo = 16
+
     with dlb.di.Cluster('Compile firmware'), dlb.ex.Context():
         dlb.ex.Context.active.helper['xtensa-esp32-elf-g++'] = '/Users/louismayencourt/Library/Arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/1.22.0-97-gc752ad5-5.2.0/bin/xtensa-esp32-elf-g++'
         dlb.ex.Context.active.helper['xtensa-esp32-elf-gcc'] = '/Users/louismayencourt/Library/Arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/1.22.0-97-gc752ad5-5.2.0/bin/xtensa-esp32-elf-gcc'
 
-        with dlb.di.Cluster('Compile Arduino C Core files'), dlb.ex.Context(max_parallel_redo_count=8):
+        with dlb.di.Cluster('Compile Arduino C Core files'), dlb.ex.Context(max_parallel_redo_count=parallel_build_redo):
             arduino_esp32_core_c_compile_results = [
                         CXtensaEsp32Compiler(
                             source_files=[p],
@@ -117,7 +119,7 @@ with dlb.ex.Context():
                         for p in arduino_esp32_core_source_directory.iterdir(name_filter=r'.+\.c', is_dir=False, recurse_name_filter=lambda n: '.' not in n)
                     ]
 
-        with dlb.di.Cluster('Compile Arduino Cpp Core library'), dlb.ex.Context(max_parallel_redo_count=8):
+        with dlb.di.Cluster('Compile Arduino Cpp Core library'), dlb.ex.Context(max_parallel_redo_count=parallel_build_redo):
             arduino_esp32_core_cpp_compile_results = [
                         CppXtensaEsp32Compiler(
                             source_files=[p],
@@ -131,8 +133,10 @@ with dlb.ex.Context():
             firmware_hpp_source_directory = dlb.fs.Path('firmware/')
             firmware_hpp_include_directory = [firmware_include_directory]
             firmware_hpp_include_directory.extend(arduino_esp32_sdk_include_directory)
-            neopixel_library_directory = dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/Adafruit_NeoPixel/')
-            firmware_hpp_include_directory.append(neopixel_library_directory)
+            external_libraries_directories = [dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/Adafruit_NeoPixel/'),
+                                                dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/ESPAsyncWebServer-master/src/'),
+                                                dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/AsyncTCP-master/src/')]
+            firmware_hpp_include_directory.extend(external_libraries_directories)
 
             firmware_hpp_compile_results = [
                 CppXtensaEsp32Compiler(

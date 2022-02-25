@@ -1,7 +1,8 @@
 #ifndef __NETWORK_TIME_HPP
 #define __NETWORK_TIME_HPP
 
-#include "time.h"
+#include <Arduino.h>
+#include <time.h>
 
 #define NTP_SERVER "ntp.metas.ch"
 
