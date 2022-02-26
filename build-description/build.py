@@ -1,3 +1,4 @@
+from ast import arguments
 from distutils.log import ERROR
 from logging import CRITICAL, WARNING
 import dlb.fs
@@ -80,9 +81,24 @@ class CppXtensaEsp32Linker(dlb_contrib.gcc._LinkerGcc):
                 # *result.object_and_archive_files  # note: type detection by suffix of path cannot be disabled
             ]
 
-
             await context.execute_helper(self.EXECUTABLE, link_arguments)
             context.replace_output(result.linked_file, linked_file)
+
+class Esptool(dlb.ex.Tool):
+    EXECUTABLE = 'esptool'
+
+    input_elf_file = dlb.ex.input.RegularFile()
+
+    output_bin_file = dlb.ex.output.RegularFile(replace_by_same_content=False)
+
+    def get_arguments(self):
+        return ['--chip', 'esp32', 'elf2image', '--flash_mode', 'dio', '--flash_freq', '80m', '--flash_size', '4MB']
+
+    async def redo(self, result, context):
+        command_arguments = []
+        command_arguments = self.get_arguments()
+        command_arguments += ['-o', result.output_bin_file, result.input_elf_file]
+        await context.execute_helper(self.EXECUTABLE, command_arguments)
 
 class CppCompiler(dlb_contrib.gcc.CplusplusCompilerGcc):
     DEFINITIONS = {'UNITY_FIXTURE_NO_EXTRAS':1}
@@ -186,7 +202,7 @@ with dlb.ex.Context():
                 ]
 
         with dlb.di.Cluster('Compile Firmware hpp'), dlb.ex.Context(max_parallel_redo_count=parallel_build_redo):
-            firmware_hpp_source_directory = dlb.fs.Path('firmware/')
+            firmware_hpp_source_directory = dlb.fs.Path('src/')
             firmware_hpp_include_directory = [firmware_include_directory]
             firmware_hpp_include_directory.extend(arduino_esp32_sdk_include_directory)
             external_libraries_directories = [dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/Adafruit_NeoPixel/'),
@@ -194,82 +210,76 @@ with dlb.ex.Context():
                                                 dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/AsyncTCP-master/src/')]
             firmware_hpp_include_directory.extend(external_libraries_directories)
 
-            # firmware_hpp_compile_results = [
-            #     CppXtensaEsp32Compiler(
-            #         source_files=[p],
-            #         object_files=[build_output_directory / p.with_appended_suffix('.o')],
-            #         include_search_directories=firmware_hpp_include_directory,
-            #     ).start()
-            #     for p in firmware_hpp_source_directory.iterdir(name_filter=r'.+\.hpp', is_dir=False)
-            # ]
-            p = dlb.fs.Path('firmware/firmware.cpp')
             firmware_hpp_compile_results = [
                 CppXtensaEsp32Compiler(
                     source_files=[p],
                     object_files=[build_output_directory / p.with_appended_suffix('.o')],
                     include_search_directories=firmware_hpp_include_directory,
                 ).start()
+                for p in firmware_hpp_source_directory.iterdir(name_filter=r'.+\.(hpp|cpp)', is_dir=False)
             ]
 
         with dlb.di.Cluster('Link Firmware'), dlb.ex.Context():
-            # dlb.cf.level.helper_execution = dlb.di.INFO
+            dlb.cf.level.helper_execution = dlb.di.INFO
             object_files = [r.object_files[0] for r in arduino_esp32_core_c_compile_results]
             object_files += [r.object_files[0] for r in arduino_esp32_core_cpp_compile_results]
             object_files += [r.object_files[0] for r in adafruit_neopixel_compile_results]
             object_files += (r.object_files[0] for r in firmware_hpp_compile_results)
-            test_binary = CppXtensaEsp32Linker(
+            firmware_elf_file = CppXtensaEsp32Linker(
                 object_and_archive_files=object_files,
                 library_search_directories=[arduino_esp32_directory / 'tools/sdk/lib/',
                                             arduino_esp32_directory / 'tools/sdk/ld/'],
                 linked_file=distribution_directory / 'firmware'
                 ).start().linked_file
+            dlb.cf.level.helper_execution = dlb.di.WARNING
 
-        # firmware_compile_results = [
-        #     CppXtensaEsp32Compiler(
-        #         source_files=[p],
-        #         object_files=[build_output_directory / p.with_appended_suffix('.o')],
-        #         include_search_directories=[firmware_include_directory],
-        #     ).start()
-        #     for p in firmware_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False)
-        # ]
+            dlb.ex.Context.active.helper[Esptool.EXECUTABLE] = '/Users/louismayencourt/Library/Arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool'
+            firmware_elf_file = [
+                Esptool(
+                    input_elf_file=firmware_elf_file,
+                    output_bin_file=distribution_directory / 'firmware.bin',
+                ).start()
+            ]
 
-    with dlb.di.Cluster('Compile tests'), dlb.ex.Context():
-        firmware_compile_results = [
-            CppCompiler(
-                source_files=[p],
-                object_files=[build_output_directory / p.with_appended_suffix('.o')],
-                include_search_directories=[firmware_include_directory],
+    compile_test = False
+    if compile_test:
+        with dlb.di.Cluster('Compile tests'), dlb.ex.Context():
+            firmware_compile_results = [
+                CppCompiler(
+                    source_files=[p],
+                    object_files=[build_output_directory / p.with_appended_suffix('.o')],
+                    include_search_directories=[firmware_include_directory],
+                ).start()
+                for p in firmware_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False)
+            ]
+
+            compile_results = [
+                CppCompiler(
+                    source_files=[p],
+                    object_files=[build_output_directory / p.with_appended_suffix('.o')],
+                    include_search_directories=[firmware_include_directory,
+                                                test_source_directory,
+                                                test_spy_sources_directory, 
+                                                unity_include_directory],
+
+                ).start()
+                for p in test_source_directory.iterdir(name_filter=r'.+\.(?:c|cpp)', is_dir=False, recurse_name_filter=lambda n: '.' not in n)
+            ]
+
+        with dlb.di.Cluster('Link tests'), dlb.ex.Context():
+            object_files = [r.object_files[0] for r in compile_results]
+            object_files+= (r.object_files[0] for r in firmware_compile_results)
+            test_binary = dlb_contrib.gcc.CplusplusLinkerGcc(
+                object_and_archive_files=object_files,
+                linked_file=distribution_directory / 'unity_test').start().linked_file
+
+        with dlb.di.Cluster('Test'), dlb.ex.Context():
+            # TODO: Check how to do define a tool form a generated build-product
+            #dlb.ex.Context.active.helper['unity_test'] = '/Users/louismayencourt/project/wordclock_upstream/dist/test/unity_test'
+            dlb.ex.Context.active.helper[UnitTest.EXECUTABLE] = test_binary
+            UnitTest(
+                test_binary=test_binary,
             ).start()
-            for p in firmware_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False)
-        ]
-
-        compile_results = [
-            CppCompiler(
-                source_files=[p],
-                object_files=[build_output_directory / p.with_appended_suffix('.o')],
-                include_search_directories=[firmware_include_directory,
-                                            test_source_directory,
-                                            test_spy_sources_directory, 
-                                            unity_include_directory],
-
-            ).start()
-            for p in test_source_directory.iterdir(name_filter=r'.+\.(?:c|cpp)', is_dir=False, recurse_name_filter=lambda n: '.' not in n)
-        ]
-
-    with dlb.di.Cluster('Link tests'), dlb.ex.Context():
-        object_files = [r.object_files[0] for r in compile_results]
-        object_files+= (r.object_files[0] for r in firmware_compile_results)
-        test_binary = dlb_contrib.gcc.CplusplusLinkerGcc(
-            object_and_archive_files=object_files,
-            linked_file=distribution_directory / 'unity_test').start().linked_file
-
-    with dlb.di.Cluster('Test'), dlb.ex.Context():
-        # TODO: Check how to do define a tool form a generated build-product
-        #dlb.ex.Context.active.helper['unity_test'] = '/Users/louismayencourt/project/wordclock_upstream/dist/test/unity_test'
-        dlb.ex.Context.active.helper[UnitTest.EXECUTABLE] = test_binary
-        UnitTest(
-            test_binary=test_binary,
-        ).start()
 
 
 dlb.di.inform('finished successfully')
