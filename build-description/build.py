@@ -37,7 +37,7 @@ class CppXtensaEsp32Compiler(dlb_contrib.gcc._CompilerGcc):
 class CppXtensaEsp32Linker(dlb_contrib.gcc._LinkerGcc):
     EXECUTABLE = 'xtensa-esp32-elf-gcc'
 
-    LIBRARY_FILENAMES = ('gcc', 'esp_websocket_client', 'wpa2', 'detection', 'esp_https_server', 'wps', 'hal', 'console', 'pe', 'soc', 'sdmmc', 'pthread', 'log', 'esp_http_client', 'json', 'mesh', 'esp32-camera', 'net80211', 'wpa_supplicant', 'c', 'mqtt', 'cxx', 'esp_https_ota', 'ulp', 'efuse', 'pp', 'mdns', 'bt', 'wpa', 'spiffs', 'heap', 'image_util', 'unity', 'rtc', 'mbedtls', 'face_recognition', 'nghttp', 'jsmn', 'openssl', 'core', 'fatfs', 'm', 'protocomm', 'smartconfig', 'xtensa-debug-module', 'dl', 'esp_event', 'esp-tls', 'fd', 'espcoredump', 'esp_http_server', 'fr', 'smartconfig_ack', 'wear_levelling', 'tcp_transport', 'lwip', 'phy', 'vfs', 'coap', 'esp32', 'libsodium', 'bootloader_support', 'driver', 'coexist', 'asio', 'od', 'micro-ecc', 'esp_ringbuf', 'detection_cat_face', 'app_update', 'espnow', 'face_detection', 'app_trace', 'newlib', 'btdm_app', 'wifi_provisioning', 'freertos', 'freemodbus', 'ethernet', 'nvs_flash', 'spi_flash', 'c_nano', 'expat', 'fb_gfx', 'protobuf-c', 'esp_adc_cal', 'tcpip_adapter ', 'stdc++')
+    LIBRARY_FILENAMES = ('gcc', 'esp_websocket_client', 'wpa2', 'detection', 'esp_https_server', 'wps', 'hal', 'console', 'pe', 'soc', 'sdmmc', 'pthread', 'log', 'esp_http_client', 'json', 'mesh', 'esp32-camera', 'net80211', 'wpa_supplicant', 'c', 'mqtt', 'cxx', 'esp_https_ota', 'ulp', 'efuse', 'pp', 'mdns', 'bt', 'wpa', 'spiffs', 'heap', 'image_util', 'unity', 'rtc', 'mbedtls', 'face_recognition', 'nghttp', 'jsmn', 'openssl', 'core', 'fatfs', 'm', 'protocomm', 'smartconfig', 'xtensa-debug-module', 'dl', 'esp_event', 'esp-tls', 'fd', 'espcoredump', 'esp_http_server', 'fr', 'smartconfig_ack', 'wear_levelling', 'tcp_transport', 'lwip', 'phy', 'vfs', 'coap', 'esp32', 'libsodium', 'bootloader_support', 'driver', 'coexist', 'asio', 'od', 'micro-ecc', 'esp_ringbuf', 'detection_cat_face', 'app_update', 'espnow', 'face_detection', 'app_trace', 'newlib', 'btdm_app', 'wifi_provisioning', 'freertos', 'freemodbus', 'ethernet', 'nvs_flash', 'spi_flash', 'c_nano', 'expat', 'fb_gfx', 'protobuf-c', 'esp_adc_cal', 'tcpip_adapter', 'stdc++')
 
     def get_all_link_arguments(self) -> List[Union[str, dlb.fs.Path, dlb.fs.Path.Native]]:
         link_arguments = ['-nostdlib']
@@ -66,13 +66,20 @@ class CppXtensaEsp32Linker(dlb_contrib.gcc._LinkerGcc):
         # link
         with context.temporary() as linked_file:
             link_arguments += [
-                '-o', linked_file,
-                *result.object_and_archive_files  # note: type detection by suffix of path cannot be disabled
+                '-Wl,--start-group', *result.object_and_archive_files,
             ]
-
+            
             # https://linux.die.net/man/1/ld
             for lib in self.LIBRARY_FILENAMES:
                 link_arguments += ['-l' + lib]  # if l is empty: '/usr/bin/ld: cannot find -l:'
+            
+            link_arguments += ['-Wl,--end-group']
+
+            link_arguments += [
+                '-o', linked_file,
+                # *result.object_and_archive_files  # note: type detection by suffix of path cannot be disabled
+            ]
+
 
             await context.execute_helper(self.EXECUTABLE, link_arguments)
             context.replace_output(result.linked_file, linked_file)
@@ -119,13 +126,6 @@ with dlb.ex.Context():
 
     arduino_esp32_sdk_directory = arduino_esp32_directory / 'tools/sdk/include/'
     arduino_esp32_sdk_include_directory = []
-    # arduino_esp32_sdk_include_directory.append(arduino_esp32_wifi_library)
-    # arduino_esp32_sdk_include_directory.append(arduino_esp32_lib_wifi_include_directory)
-    # arduino_esp32_sdk_include_directory.append(arduino_esp32_core_include_directory)
-    # arduino_esp32_sdk_include_directory.append(arduino_esp32_freertos_include_directory)
-    # arduino_esp32_sdk_include_directory.append(arduino_esp32_freertos_additions_include_directory)
-    # arduino_esp32_sdk_include_directory.append(arduino_esp32_sdk_config_include_directory)
-    # arduino_esp32_sdk_include_directory.append(arduino_esp32_sdk_newlib_include_directory)
     # for path in arduino_esp32_sdk_directory.iterdir(name_filter=r'.*', is_dir=True, recurse_name_filter=lambda n: '.' not in n):
     #     # print(path.native)
     #     if path.parts[-1] == 'include':
@@ -140,14 +140,14 @@ with dlb.ex.Context():
     for dir in arduino_esp32_core_include_list:
         arduino_esp32_sdk_include_directory.append(arduino_esp32_directory / dir)
 
-    adafruit_neopixel_source_directory = dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/Adafruit_NeoPixel/')
+    adafruit_neopixel_source_directory = dlb.fs.Path('external_dependencies/Adafruit_NeoPixel/')
 
     test_source_directory = dlb.fs.Path('test/')
     test_spy_sources_directory = dlb.fs.Path('test/spy/')
     unity_include_directory = dlb.fs.Path('test/unity/')
 
     build_output_directory = dlb.fs.Path('build/')
-    distribution_directory = dlb.fs.Path('dist/test/')
+    distribution_directory = dlb.fs.Path('dist/')
 
     parallel_build_redo = 16
 
@@ -182,7 +182,7 @@ with dlb.ex.Context():
                         object_files=[build_output_directory / p.with_appended_suffix('.o')],
                         include_search_directories=arduino_esp32_sdk_include_directory,
                     ).start()
-                    for p in adafruit_neopixel_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False, recurse_name_filter=lambda n: '.' not in n)
+                    for p in adafruit_neopixel_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False)
                 ]
 
         with dlb.di.Cluster('Compile Firmware hpp'), dlb.ex.Context(max_parallel_redo_count=parallel_build_redo):
@@ -194,25 +194,33 @@ with dlb.ex.Context():
                                                 dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/AsyncTCP-master/src/')]
             firmware_hpp_include_directory.extend(external_libraries_directories)
 
+            # firmware_hpp_compile_results = [
+            #     CppXtensaEsp32Compiler(
+            #         source_files=[p],
+            #         object_files=[build_output_directory / p.with_appended_suffix('.o')],
+            #         include_search_directories=firmware_hpp_include_directory,
+            #     ).start()
+            #     for p in firmware_hpp_source_directory.iterdir(name_filter=r'.+\.hpp', is_dir=False)
+            # ]
+            p = dlb.fs.Path('firmware/firmware.cpp')
             firmware_hpp_compile_results = [
                 CppXtensaEsp32Compiler(
                     source_files=[p],
                     object_files=[build_output_directory / p.with_appended_suffix('.o')],
                     include_search_directories=firmware_hpp_include_directory,
                 ).start()
-                for p in firmware_hpp_source_directory.iterdir(name_filter=r'.+\.hpp', is_dir=False)
             ]
 
         with dlb.di.Cluster('Link Firmware'), dlb.ex.Context():
-            dlb.cf.level.helper_execution = dlb.di.INFO
+            # dlb.cf.level.helper_execution = dlb.di.INFO
             object_files = [r.object_files[0] for r in arduino_esp32_core_c_compile_results]
             object_files += [r.object_files[0] for r in arduino_esp32_core_cpp_compile_results]
             object_files += [r.object_files[0] for r in adafruit_neopixel_compile_results]
             object_files += (r.object_files[0] for r in firmware_hpp_compile_results)
             test_binary = CppXtensaEsp32Linker(
                 object_and_archive_files=object_files,
-                library_search_directories=[arduino_esp32_absolute_directory / 'tools/sdk/ld/',
-                                            arduino_esp32_absolute_directory / 'tools/sdk/lib/'],
+                library_search_directories=[arduino_esp32_directory / 'tools/sdk/lib/',
+                                            arduino_esp32_directory / 'tools/sdk/ld/'],
                 linked_file=distribution_directory / 'firmware'
                 ).start().linked_file
 
