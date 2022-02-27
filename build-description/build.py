@@ -84,7 +84,7 @@ class CppXtensaEsp32Linker(dlb_contrib.gcc._LinkerGcc):
             await context.execute_helper(self.EXECUTABLE, link_arguments)
             context.replace_output(result.linked_file, linked_file)
 
-class Esptool(dlb.ex.Tool):
+class EsptoolElf2Image(dlb.ex.Tool):
     EXECUTABLE = 'esptool'
 
     input_elf_file = dlb.ex.input.RegularFile()
@@ -99,6 +99,38 @@ class Esptool(dlb.ex.Tool):
         command_arguments = self.get_arguments()
         command_arguments += ['-o', result.output_bin_file, result.input_elf_file]
         await context.execute_helper(self.EXECUTABLE, command_arguments)
+
+class EsptoolFlash(dlb.ex.Tool):
+    EXECUTABLE = 'esptool'
+
+    firmware_bin_file = dlb.ex.input.RegularFile()
+    partition_bin_file = dlb.ex.input.RegularFile()
+    bootloader_bin_file = dlb.ex.input.RegularFile()
+    boot_app_bin_file = dlb.ex.input.RegularFile()
+
+    def get_arguments(self):
+        return ['--chip', 'esp32', '--port', '/dev/cu.usbserial-0001', '--baud', '921600', '--before', 'default_reset', '--after', 'hard_reset', 'write_flash', '-z', '--flash_mode', 'dio', '--flash_freq', '80m', '--flash_size', 'detect']
+
+    def get_bootloader_arguments(self):
+        return ['0xe000', 'tools/partitions/boot_app0.bin', '0x1000', 'tools/sdk/bin/bootloader_qio_80m.bin', '0x10000', 'firmware.ino.bin', '0x8000', 'firmware.ino.partitions.bin']
+
+    async def redo(self, result, context):
+        command_arguments = []
+        command_arguments = self.get_arguments()
+        command_arguments += ['0xe000', result.boot_app_bin_file, '0x1000', result.bootloader_bin_file, '0x10000', result.firmware_bin_file, '0x8000', result.partition_bin_file]
+        await context.execute_helper(self.EXECUTABLE, command_arguments)
+
+class Esp32Part(dlb.ex.Tool):
+    EXECUTABLE = 'python'
+
+    SCRIPT = '/Users/louismayencourt/Library/Arduino15/packages/esp32/hardware/esp32/1.0.6/tools/gen_esp32part.py'
+
+    csv_file = dlb.ex.input.RegularFile()
+
+    partition_bin_file = dlb.ex.output.RegularFile(replace_by_same_content=False)
+
+    async def redo(self, result, context):
+        await context.execute_helper(self.EXECUTABLE, [self.SCRIPT, '-q', result.csv_file, result.partition_bin_file])
 
 class CppCompiler(dlb_contrib.gcc.CplusplusCompilerGcc):
     DEFINITIONS = {'UNITY_FIXTURE_NO_EXTRAS':1}
@@ -233,13 +265,27 @@ with dlb.ex.Context():
                 ).start().linked_file
             dlb.cf.level.helper_execution = dlb.di.WARNING
 
-            dlb.ex.Context.active.helper[Esptool.EXECUTABLE] = '/Users/louismayencourt/Library/Arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool'
-            firmware_elf_file = [
-                Esptool(
+            dlb.ex.Context.active.helper[EsptoolElf2Image.EXECUTABLE] = '/Users/louismayencourt/Library/Arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool'
+            firmware_bin_file = [
+                EsptoolElf2Image(
                     input_elf_file=firmware_elf_file,
                     output_bin_file=distribution_directory / 'firmware.bin',
                 ).start()
             ]
+
+            partition_bin_file = [
+                Esp32Part(
+                    csv_file=arduino_esp32_directory / 'tools/partitions/default.csv',
+                    partition_bin_file=distribution_directory / 'firmware.partitions.bin',
+                ).start()
+            ]
+
+            EsptoolFlash(
+                firmware_bin_file=distribution_directory / 'firmware.bin',
+                partition_bin_file=distribution_directory / 'firmware.partitions.bin',
+                bootloader_bin_file=arduino_esp32_directory / 'tools/sdk/bin/bootloader_qio_80m.bin',
+                boot_app_bin_file= arduino_esp32_directory / 'tools/partitions/boot_app0.bin',
+            ).start()
 
     compile_test = False
     if compile_test:
@@ -271,7 +317,7 @@ with dlb.ex.Context():
             object_files+= (r.object_files[0] for r in firmware_compile_results)
             test_binary = dlb_contrib.gcc.CplusplusLinkerGcc(
                 object_and_archive_files=object_files,
-                linked_file=distribution_directory / 'unity_test').start().linked_file
+                linked_file=distribution_directory / 'test/unity_test').start().linked_file
 
         with dlb.di.Cluster('Test'), dlb.ex.Context():
             # TODO: Check how to do define a tool form a generated build-product
