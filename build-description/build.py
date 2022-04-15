@@ -58,7 +58,9 @@ with dlb.ex.Context():
     for dir in arduino_esp32_core_include_list:
         arduino_esp32_sdk_include_directory.append(arduino_esp32_directory / dir)
 
-    adafruit_neopixel_source_directory = dlb.fs.Path('external_dependencies/Adafruit_NeoPixel/')
+    external_dependencies_directory = dlb.fs.Path('external_dependencies/')
+    adafruit_neopixel_source_directory = external_dependencies_directory / 'Adafruit_NeoPixel/'
+    asyncwebserver_source_directory =  external_dependencies_directory / 'ESPAsyncWebServer/'
 
     test_source_directory = dlb.fs.Path('test/')
     test_spy_sources_directory = dlb.fs.Path('test/spy/')
@@ -93,18 +95,59 @@ with dlb.ex.Context():
                     for p in arduino_esp32_core_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False, recurse_name_filter=lambda n: '.' not in n)
                 ]
 
-        with dlb.di.Cluster('Compile external libraries'), dlb.ex.Context():
-            adafruit_neopixel_compile_results = [
+        with dlb.di.Cluster('Compile Arduino Core libraries'), dlb.ex.Context(max_parallel_redo_count=parallel_build_redo):
+            arduino_esp32_libraries_cpp_compile_results = []
+            arduino_esp32_core_libraries_relative_sources_directories = [ 'libraries/WiFi/src/',
+                                                                        'libraries/SPIFFS/src/',
+                                                                        'libraries/FS/src/',
+                                                                        'libraries/HTTPClient/src/',
+                                                                        'libraries/WiFiClientSecure/src/',
+                                                                        'libraries/HTTPUpdate/src/',
+                                                                        'libraries/Update/src/']
+            for library_relative_source_dir in arduino_esp32_core_libraries_relative_sources_directories:
+                library_source_dir = arduino_esp32_directory / library_relative_source_dir
+                arduino_esp32_libraries_cpp_compile_results += [
                     CppXtensaEsp32Compiler(
                         source_files=[p],
                         object_files=[build_output_directory / p.with_appended_suffix('.o')],
                         include_search_directories=arduino_esp32_sdk_include_directory,
                     ).start()
-                    for p in adafruit_neopixel_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False)
+                    for p in library_source_dir.iterdir(name_filter=r'.+\.cpp', is_dir=False, recurse_name_filter=lambda n: '.' not in n)
                 ]
 
+        with dlb.di.Cluster('Compile external libraries'), dlb.ex.Context(max_parallel_redo_count=parallel_build_redo):
+
+            external_dependencies = ['Adafruit_NeoPixel/',
+                                    'ESPAsyncWebServer/src/',
+                                    'AsyncTCP/src/']
+            external_dependencies_include_directory = arduino_esp32_sdk_include_directory
+            external_libraries_directories = [ external_dependencies_directory / 'Adafruit_NeoPixel/',
+                                                external_dependencies_directory / 'ESPAsyncWebServer/src/',
+                                                external_dependencies_directory / 'AsyncTCP/src/']
+            external_dependencies_include_directory.extend(external_libraries_directories)
+            external_dependencies_compile_results = []
+            for external_dependency in external_dependencies:
+                external_dependencies_source_directory = external_dependencies_directory / external_dependency
+                external_dependencies_compile_results += [
+                    CppXtensaEsp32Compiler(
+                        source_files=[p],
+                        object_files=[build_output_directory / p.with_appended_suffix('.o')],
+                        include_search_directories=external_dependencies_include_directory,
+                    ).start()
+                    for p in external_dependencies_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False)
+                ]
+
+                external_dependencies_compile_results += [
+                        CXtensaEsp32Compiler(
+                            source_files=[p],
+                            object_files=[build_output_directory / p.with_appended_suffix('.o')],
+                            include_search_directories= external_dependencies_include_directory,
+                        ).start()
+                        for p in external_dependencies_source_directory.iterdir(name_filter=r'.+\.c', is_dir=False)
+                    ]
+
         with dlb.di.Cluster('Compile Firmware hpp'), dlb.ex.Context(max_parallel_redo_count=parallel_build_redo):
-            firmware_hpp_source_directory = dlb.fs.Path('src/')
+            firmware_hpp_source_directory = dlb.fs.Path('firmware/')
             firmware_hpp_include_directory = [firmware_include_directory]
             firmware_hpp_include_directory.extend(arduino_esp32_sdk_include_directory)
             external_libraries_directories = [dlb.fs.Path('/Users/louismayencourt/Documents/Arduino/libraries/Adafruit_NeoPixel/'),
@@ -118,22 +161,22 @@ with dlb.ex.Context():
                     object_files=[build_output_directory / p.with_appended_suffix('.o')],
                     include_search_directories=firmware_hpp_include_directory,
                 ).start()
-                for p in firmware_hpp_source_directory.iterdir(name_filter=r'.+\.(hpp|cpp)', is_dir=False)
+                for p in firmware_hpp_source_directory.iterdir(name_filter=r'.+\.cpp', is_dir=False)
             ]
 
         with dlb.di.Cluster('Link Firmware'), dlb.ex.Context():
-            dlb.cf.level.helper_execution = dlb.di.INFO
+            # dlb.cf.level.helper_execution = dlb.di.INFO
             object_files = [r.object_files[0] for r in arduino_esp32_core_c_compile_results]
             object_files += [r.object_files[0] for r in arduino_esp32_core_cpp_compile_results]
-            object_files += [r.object_files[0] for r in adafruit_neopixel_compile_results]
-            object_files += (r.object_files[0] for r in firmware_hpp_compile_results)
+            object_files += [r.object_files[0] for r in arduino_esp32_libraries_cpp_compile_results]
+            object_files += [r.object_files[0] for r in external_dependencies_compile_results]
+            object_files += [r.object_files[0] for r in firmware_hpp_compile_results]
             firmware_elf_file = CppXtensaEsp32Linker(
                 object_and_archive_files=object_files,
                 library_search_directories=[arduino_esp32_directory / 'tools/sdk/lib/',
                                             arduino_esp32_directory / 'tools/sdk/ld/'],
                 linked_file=distribution_directory / 'firmware'
                 ).start().linked_file
-            dlb.cf.level.helper_execution = dlb.di.WARNING
 
             dlb.ex.Context.active.helper[EsptoolElf2Image.EXECUTABLE] = '/Users/louismayencourt/Library/Arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool'
             firmware_bin_file = [
@@ -150,14 +193,16 @@ with dlb.ex.Context():
                 ).start()
             ]
 
-            EsptoolFlash(
-                firmware_bin_file=distribution_directory / 'firmware.bin',
-                partition_bin_file=distribution_directory / 'firmware.partitions.bin',
-                bootloader_bin_file=arduino_esp32_directory / 'tools/sdk/bin/bootloader_qio_80m.bin',
-                boot_app_bin_file= arduino_esp32_directory / 'tools/partitions/boot_app0.bin',
-            ).start()
+            do_flash = True
+            if do_flash:
+                EsptoolFlash(
+                    firmware_bin_file=distribution_directory / 'firmware.bin',
+                    partition_bin_file=distribution_directory / 'firmware.partitions.bin',
+                    bootloader_bin_file=arduino_esp32_directory / 'tools/sdk/bin/bootloader_qio_80m.bin',
+                    boot_app_bin_file= arduino_esp32_directory / 'tools/partitions/boot_app0.bin',
+                ).start()
 
-    compile_test = False
+    compile_test = True
     if compile_test:
         with dlb.di.Cluster('Compile tests'), dlb.ex.Context():
             firmware_compile_results = [
