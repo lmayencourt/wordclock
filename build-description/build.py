@@ -193,7 +193,7 @@ with dlb.ex.Context():
                 ).start()
             ]
 
-            do_flash = True
+            do_flash = False
             if do_flash:
                 EsptoolFlash(
                     firmware_bin_file=distribution_directory / 'firmware.bin',
