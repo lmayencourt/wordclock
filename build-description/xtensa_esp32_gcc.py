@@ -130,7 +130,7 @@ class EsptoolFlash(dlb.ex.Tool):
         await context.execute_helper(self.EXECUTABLE, command_arguments)
 
 class Esp32Part(dlb.ex.Tool):
-    EXECUTABLE = 'python'
+    EXECUTABLE = 'python3'
 
     SCRIPT = '/Users/louismayencourt/Library/Arduino15/packages/esp32/hardware/esp32/1.0.6/tools/gen_esp32part.py'
 
