@@ -1,10 +1,9 @@
 use std::thread;
 use std::time::Duration;
 
-use embedded_hal::digital::v2::OutputPin;
-
 use esp_idf_sys as _; // If using the `binstart` feature of `esp-idf-sys`, always keep this module imported
 use esp_idf_hal::prelude::*;
+use esp_idf_hal::gpio::*;
 
 
 fn main() {
@@ -15,7 +14,8 @@ fn main() {
     println!("Hello, world!");
 
     let peripherals = Peripherals::take().unwrap();
-    let mut led = peripherals.pins.gpio2.into_output().unwrap();
+    let mut led = PinDriver::output(peripherals.pins.gpio2).unwrap();
+
 
     loop {
         led.set_high().unwrap();
