@@ -1,6 +1,8 @@
 use std::thread;
 use std::time::Duration;
 
+use anyhow::{anyhow, Result};
+
 // use embedded_svc::{
 //     http::{
 //         client::{Client, Request, RequestWrite, Response},
@@ -27,7 +29,7 @@ use esp_idf_svc::eventloop::*;
 const SSID: &str = env!("RUST_ESP32_WIFI_SSID");
 const PASS: &str = env!("RUST_ESP32_WIFI_PASSWORD");
 
-fn main() {
+fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
     // implemented by esp-idf-sys might not link properly. See https://github.com/esp-rs/esp-idf-template/issues/71
     esp_idf_sys::link_patches();
@@ -35,16 +37,16 @@ fn main() {
     println!("Hello, world!");
 
     let peripherals = Peripherals::take().unwrap();
-    let mut led = PinDriver::output(peripherals.pins.gpio2).unwrap();
+    let mut led = PinDriver::output(peripherals.pins.gpio2)?;
 
-    let sys_loop_stack = EspSystemEventLoop::take().unwrap();
+    let sys_loop_stack = EspSystemEventLoop::take()?;
     let nvs = EspDefaultNvsPartition::take().ok();
-    let mut wifi = EspWifi::new(peripherals.modem, sys_loop_stack, nvs).unwrap();
+    let mut wifi = EspWifi::new(peripherals.modem, sys_loop_stack, nvs)?;
 
     let wifi_res = wifi_setup_and_connect(&mut wifi);
     match wifi_res {
         Ok(()) => println!("Connected to wifi!"),
-        Err(e) => println!("Failed to connect {}", e),
+        Err(err) => println!("Failed to connect: {}", err),
     }
 
     loop {
@@ -55,7 +57,20 @@ fn main() {
     }
 }
 
-fn wifi_setup_and_connect(wifi:&mut EspWifi) -> Result<(), esp_idf_sys::EspError> {
+#[derive(Debug)]
+enum WifiErrors {
+    CouldNotFindNetwork,
+}
+
+impl std::fmt::Display for WifiErrors {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::CouldNotFindNetwork => write!(f, "Could not find Network"),
+        }
+    }
+}
+
+fn wifi_setup_and_connect(wifi:&mut EspWifi) -> Result<()> {
     let scan_result = wifi.scan()?;
     let home_network = scan_result.into_iter().find(|a| a.ssid == SSID);
     if home_network.is_some() {
@@ -63,7 +78,7 @@ fn wifi_setup_and_connect(wifi:&mut EspWifi) -> Result<(), esp_idf_sys::EspError
     }
     else {
         println!("Error: Failed to detect home network {:?}", SSID);
-        return Err(esp_idf_sys::EspError::from(99).unwrap());
+        return Err(anyhow!(WifiErrors::CouldNotFindNetwork));
     }
 
     wifi.set_configuration(&wifi::Configuration::Client(
