@@ -2,3 +2,4 @@
 /.embuild
 /target
 /Cargo.lock
+wifi_pwd.sh
