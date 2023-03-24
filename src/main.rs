@@ -2,6 +2,7 @@ use std::thread;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
+use log::*;
 
 // use embedded_svc::{
 //     http::{
@@ -34,7 +35,8 @@ fn main() -> Result<()> {
     // implemented by esp-idf-sys might not link properly. See https://github.com/esp-rs/esp-idf-template/issues/71
     esp_idf_sys::link_patches();
 
-    println!("Hello, world!");
+    esp_idf_svc::log::EspLogger::initialize_default();
+    info!("Hello, ESP32 world!");
 
     let peripherals = Peripherals::take().unwrap();
     let mut led = PinDriver::output(peripherals.pins.gpio2)?;
@@ -45,8 +47,8 @@ fn main() -> Result<()> {
 
     let wifi_res = wifi_setup_and_connect(&mut wifi);
     match wifi_res {
-        Ok(()) => println!("Connected to wifi!"),
-        Err(err) => println!("Failed to connect: {}", err),
+        Ok(()) => info!("Connected to wifi!"),
+        Err(err) => error!("Failed to connect: {}", err),
     }
 
     loop {
@@ -74,10 +76,10 @@ fn wifi_setup_and_connect(wifi:&mut EspWifi) -> Result<()> {
     let scan_result = wifi.scan()?;
     let home_network = scan_result.into_iter().find(|a| a.ssid == SSID);
     if home_network.is_some() {
-        println!("Detected home network {:?}", SSID);
+        info!("Detected home network {:?}", SSID);
     }
     else {
-        println!("Error: Failed to detect home network {:?}", SSID);
+        error!("Error: Failed to detect home network {:?}", SSID);
         return Err(anyhow!(WifiErrors::CouldNotFindNetwork));
     }
 
