@@ -27,6 +27,10 @@ use esp_idf_svc::wifi::*;
 use esp_idf_svc::nvs::*;
 use esp_idf_svc::eventloop::*;
 
+use esp_idf_svc::systime::EspSystemTime;
+
+pub mod network_time;
+
 const SSID: &str = env!("RUST_ESP32_WIFI_SSID");
 const PASS: &str = env!("RUST_ESP32_WIFI_PASSWORD");
 
@@ -51,11 +55,17 @@ fn main() -> Result<()> {
         Err(err) => error!("Failed to connect: {}", err),
     }
 
+    network_time::init()?;
+
     loop {
         led.set_high().unwrap();
         thread::sleep(Duration::from_millis(500));
         led.set_low().unwrap();
         thread::sleep(Duration::from_millis(500));
+
+        info!("Network time epoch: {:?}", network_time::get_epoch_time());
+        info!("Parsed network time: {}", network_time::get_time());
+        info!("System time: {:?}", EspSystemTime{}.now());
     }
 }
 
