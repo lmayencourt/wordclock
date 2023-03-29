@@ -23,27 +23,25 @@ impl std::fmt::Display for NetworkTimeErrors {
 }
 
 pub fn init() -> Result<()> {
+    // sntp_setoperatingmode()
+    // sntp_set_sync_mode()
+    // sntp_setservername()
+    // sntp_set_time_sync_notification_cb()
+    // sntp_init()
     let time = EspSntp::new(&SntpConf::default())?;
-
-    // let current_time = time.get_sync_status();
-    // info!("current time querry status: {:?}", current_time);
 
     unsafe {
         esp_idf_sys::sntp_set_sync_interval(15 * 100);
         esp_idf_sys::sntp_restart();
     };
-    info!("Sntp interval: {}", unsafe {
+    debug!("Sntp interval: {}", unsafe {
         esp_idf_sys::sntp_get_sync_interval()
     });
-    // let mut network_time = esp_idf_sys::timeval::default();
 
     let mut retries_before_timeout: u32 = 10;
     loop {
-        //     unsafe {
-        //         esp_idf_sys::sntp_sync_time(&mut network_time);
-        //     }
         let time_sync_status: SyncStatus = time.get_sync_status();
-        info!("Wait for time sync {:?}", time_sync_status);
+        debug!("Wait for time sync {:?}", time_sync_status);
         if time_sync_status == SyncStatus::Completed {
             break;
         }
@@ -56,16 +54,7 @@ pub fn init() -> Result<()> {
         thread::sleep(Duration::from_secs(2));
     }
 
-    // info!("Local time after synch completed: {:?}", EspSystemTime{}.now());
-
-    // let mut network_time = esp_idf_sys::timeval::default();
-    // let mut local_time:esp_idf_sys::time_t = 0;
-    // let mut local_time_info:esp_idf_sys::tm;
-    // unsafe {
-    //     esp_idf_sys::sntp_sync_time(&mut network_time);
-    // esp_idf_sys::localtime_r(&now, &mut local_time_info);
-    // }
-
+    get_time();
     configure_time_zone();
 
     Ok(())
@@ -112,7 +101,7 @@ pub fn get_time() -> NetworkTime {
         esp_idf_sys::localtime_r(&now, &mut time_info);
     }
 
-    info!("Time info is {:?}", time_info);
+    debug!("Time info is {:?}", time_info);
     NetworkTime {
         second: time_info.tm_sec as u8,
         minute: time_info.tm_min as u8,

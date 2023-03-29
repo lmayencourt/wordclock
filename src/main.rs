@@ -37,7 +37,6 @@ fn main() -> Result<()> {
     let mut network = network::Network::new(peripherals.modem)?;
     let wifi_res = network.setup_and_connect();
 
-    // let wifi_res = network::wifi_setup_and_connect(&mut wifi);
     match wifi_res {
         Ok(()) => info!("Connected to wifi!"),
         Err(err) => error!("Failed to connect: {}", err),
