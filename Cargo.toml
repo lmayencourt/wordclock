@@ -1,5 +1,5 @@
 [package]
-name = "hello-world"
+name = "word_clock"
 version = "0.1.0"
 authors = ["louismayencourt <louis.mayencourt@gmail.com>"]
 edition = "2021"
