@@ -10,9 +10,6 @@ use esp_idf_svc::wifi::*;
 use esp_idf_svc::eventloop::*;
 use esp_idf_svc::nvs::*;
 
-const SSID: &str = env!("RUST_ESP32_WIFI_SSID");
-const PASS: &str = env!("RUST_ESP32_WIFI_PASSWORD");
-
 pub struct Network<'a> {
     wifi: EspWifi<'a>,
 }
@@ -38,20 +35,20 @@ impl<'a> Network<'a> {
         Ok(Self { wifi })
     }
 
-    pub fn setup_and_connect(&mut self) -> Result<()> {
+    pub fn setup_and_connect(&mut self, ssid: &str, password: &str) -> Result<()> {
         let scan_result = self.wifi.scan()?;
-        let home_network = scan_result.into_iter().find(|a| a.ssid == SSID);
+        let home_network = scan_result.into_iter().find(|a| a.ssid == ssid);
         if home_network.is_some() {
-            info!("Detected home network {:?}", SSID);
+            info!("Detected home network {:?}", ssid);
         } else {
-            error!("Error: Failed to detect home network {:?}", SSID);
+            error!("Error: Failed to detect home network {:?}", ssid);
             return Err(anyhow!(WifiErrors::CouldNotFindNetwork));
         }
 
         self.wifi
             .set_configuration(&wifi::Configuration::Client(wifi::ClientConfiguration {
-                ssid: SSID.into(),
-                password: PASS.into(),
+                ssid: ssid.into(),
+                password: password.into(),
                 // channel,
                 ..Default::default()
             }))?;

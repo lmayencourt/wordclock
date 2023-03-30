@@ -20,8 +20,11 @@ use esp_idf_hal::prelude::*;
 
 use esp_idf_svc::systime::EspSystemTime;
 
+use crate::persistent_settings::WifiConfiguration;
+
 pub mod network;
 pub mod network_time;
+pub mod persistent_settings;
 
 fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
@@ -31,11 +34,25 @@ fn main() -> Result<()> {
     esp_idf_svc::log::EspLogger::initialize_default();
     info!("Hello, ESP32 world!");
 
+    let mut config;
+
+    info!("Check if wifi config already exist");
+    if let Ok(true) = WifiConfiguration::do_exist() {
+        info!("Read wifi configuration from persistent storage");
+        config = WifiConfiguration::load()?;
+    } else {
+        info!("Write wifi configuration to persistent storage");
+        config = WifiConfiguration::new(env!("RUST_ESP32_WIFI_SSID"), env!("RUST_ESP32_WIFI_PASSWORD"));
+        config.store()?;
+    }
+
+    info!("Config {:?}", config);
+
     let peripherals = Peripherals::take().unwrap();
     let mut led = PinDriver::output(peripherals.pins.gpio2)?;
 
     let mut network = network::Network::new(peripherals.modem)?;
-    let wifi_res = network.setup_and_connect();
+    let wifi_res = network.setup_and_connect(&config.ssid, &config.password);
 
     match wifi_res {
         Ok(()) => info!("Connected to wifi!"),
