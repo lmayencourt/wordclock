@@ -9,3 +9,6 @@ espmonitor /dev/tty.usbserial-2110
 
 ## Setup rust analyzer for ESP32
 setup the environment variables in `.cargo/config.toml` to match the `export-esp.sh` values.
+
+## License
+Licensed under MIT license ([LICENSE-MIT](LICENSE.txt) or http://opensource.org/licenses/MIT)
