@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use log::*;
+use smart_leds::colors::*;
 
 // use embedded_svc::{
 //     http::{
@@ -24,8 +25,10 @@ use esp_idf_hal::prelude::*;
 
 use esp_idf_svc::systime::EspSystemTime;
 
+use crate::led_driver::WS2812;
 use crate::persistent_settings::WifiConfiguration;
 
+pub mod led_driver;
 pub mod network;
 pub mod network_time;
 pub mod persistent_settings;
@@ -54,6 +57,10 @@ fn main() -> Result<()> {
 
     let peripherals = Peripherals::take().unwrap();
     let mut led = PinDriver::output(peripherals.pins.gpio2)?;
+
+    info!("Set LEDS to organe");
+    let mut display = WS2812::new(3, peripherals.pins.gpio13, peripherals.rmt.channel0)?;
+    display.write(&[DARK_GOLDENROD, DARK_BLUE, DARK_CYAN, DARK_ORCHID])?;
 
     let mut network = network::Network::new(peripherals.modem)?;
     let wifi_res = network.setup_and_connect(&config.ssid, &config.password);
