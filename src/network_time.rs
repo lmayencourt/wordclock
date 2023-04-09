@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 Louis Mayencourt
+ */
+
 use std::ffi::CString;
 use std::thread;
 use std::time::Duration;

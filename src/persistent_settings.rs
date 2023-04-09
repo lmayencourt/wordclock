@@ -1,9 +1,10 @@
-/*
- * MIT license
+/* SPDX-License-Identifier: MIT
  *
+ * This files uses part of code from:
+ * https://github.com/taunusflieger/anemometer/blob/master/anemometer-production/src/configuration.rs
  * Copyright (c) 2021-2023 Michael Zill
  *
- * https://github.com/taunusflieger/anemometer/blob/master/anemometer-production/src/configuration.rs 
+ * Copyright (c) 2023 Louis Mayencourt
  */
 
 use anyhow::{anyhow,Result, Context};

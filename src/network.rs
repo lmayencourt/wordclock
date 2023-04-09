@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 Louis Mayencourt
+ */
+
 use anyhow::{anyhow, Result};
 use esp_idf_sys::EspError;
 use log::*;
