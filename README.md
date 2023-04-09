@@ -21,7 +21,7 @@ setup the environment variables in `.cargo/config.toml` to match the `export-esp
 
 ## TODO list
 - [ ] FOTA.
-- [ ] Persistent storage for configuration.
+- [x] Persistent storage for configuration.
 - [ ] NeoPixel LEDs driver.
 - [ ] Main state-machine.
 - [ ] Configuration server.
