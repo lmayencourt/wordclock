@@ -10,9 +10,11 @@ Follow the instruction from https://github.com/esp-rs/esp-idf-template to create
 ````
 . ~/export-esp.sh
 cargo build
-espflash /dev/tty.usbserial-2110 target/xtensa-esp32-espidf/debug/hello-world
+espflash /dev/tty.usbserial-2110 target/xtensa-esp32-espidf/debug/hello-world --flash-freq 80M --flash-size 4MB --flash-mode DIO --speed 921600
 espmonitor /dev/tty.usbserial-2110
 ````
+
+Add `--monitor` option to `espflash` to directly open monitoring after flashing.
 
 ## Setup rust analyzer for ESP32
 setup the environment variables in `.cargo/config.toml` to match the `export-esp.sh` values.
