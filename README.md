@@ -22,5 +22,19 @@ setup the environment variables in `.cargo/config.toml` to match the `export-esp
 ## Project management
 A [GitHub project](https://github.com/users/lmayencourt/projects/1/) is used for tasks management.
 
+## Documentation
+### Architecture documentation
+`mdbook` is used for rendering the architecture documentation in `doc/architecture/`.
+
+It can be generated with:
+````
+mdbook build
+````
+
+To build and open locally the documentation, use:
+````
+mdbook serve --open
+````
+
 ## License
 Licensed under MIT license ([LICENSE-MIT](LICENSE.txt) or http://opensource.org/licenses/MIT)
