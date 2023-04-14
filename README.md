@@ -19,14 +19,8 @@ Add `--monitor` option to `espflash` to directly open monitoring after flashing.
 ## Setup rust analyzer for ESP32
 setup the environment variables in `.cargo/config.toml` to match the `export-esp.sh` values.
 
-## TODO list
-- [ ] FOTA.
-- [x] Persistent storage for configuration.
-- [ ] NeoPixel LEDs driver.
-- [ ] Main state-machine.
-- [ ] Configuration server.
-  - [ ] HTML over WiFi.
-  - [ ] BLE.
+## Project management
+A [GitHub project](https://github.com/users/lmayencourt/projects/1/) is used for tasks management.
 
 ## License
 Licensed under MIT license ([LICENSE-MIT](LICENSE.txt) or http://opensource.org/licenses/MIT)
