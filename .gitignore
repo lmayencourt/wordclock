@@ -1,4 +1,7 @@
-build/
-dist/
 *.DS_Store
 .vscode/
+/.vscode
+/.embuild
+/target
+/Cargo.lock
+wifi_pwd.sh
