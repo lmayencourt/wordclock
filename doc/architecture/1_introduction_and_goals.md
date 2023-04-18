@@ -3,6 +3,8 @@
 
 The secondary goal is to have a project to experiment with various technologies like Rust, laser cutting, 3d printing, and various engineering skills like software architecture, software requirements, Test-Driven Development and documentation.
 
+This document is not limited to software architecture, but considers all the work realized by the *Embedded engineer*, include [PCB](12_glossary.md#PCB) design.
+
 ## Requirements overview
 Essential features:
 - Display current time, using your favorite Swiss-German dialect.
