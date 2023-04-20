@@ -3,7 +3,7 @@
 Display the time in swiss-german.
 The clock get the time from the Internet. For this to work, a wifi network is needed.
 
-<img src="./doc/images/leds_matrix_assembled.png" width="300"/> <img src="./doc/images/white.png" width="300"/>
+<img src="./doc/images/leds_matrix_assembled.png" width="300"/>
 
 ## Configuration
 
