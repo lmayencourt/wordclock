@@ -11,14 +11,31 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Context, Result};
 use smart_leds::RGB8;
+use smart_leds::colors::*;
 
 use esp_idf_hal::gpio::*;
 use esp_idf_hal::rmt::CHANNEL0;
 use esp_idf_hal::rmt::config::TransmitConfig;
 use esp_idf_hal::rmt::{VariableLengthSignal, PinState, Pulse, TxRmtDriver};
 
+/// A WS2812 takes a frame of 24 bits (8 bits per color).
 const RGB_FRAME_BIT_LENGTH: u32 = 24;
 
+/// Interface to command a RGB LED strip, composed of multiple LEDs.
+///
+/// # Errors
+/// The functions will return an error if the hardware fails to carry the operation.
+pub trait RgbLedStrip {
+    /// Turn all the LEDs off.
+    fn clear(&mut self) -> Result<()>;
+    
+    /// Set the LEDs according the the provided `pixels` input.
+    fn write(&mut self, pixels: &[RGB8]) -> Result<()>;
+}
+
+/// A ws2812 RGB LED controller.
+///
+/// Follow timing according to [datasheet](https://cdn-shop.adafruit.com/datasheets/WS2812.pdf)
 pub struct WS2812<'d> {
     led_count: u32,
     tx_rmt: TxRmtDriver<'d>,
@@ -31,6 +48,14 @@ fn ns(nanos: u64) -> Duration {
 }
 
 impl<'d> WS2812<'d> {
+    /// Create a WS2812 based LEDs strip controller.
+    ///
+    /// This implementation use the TxRmt hardware of the ESP32 to generate the serial frame.
+    /// The TxRmt channel to use must be provided as input, along the number of LEDs on the
+    /// strip and the GPIO pin to use.
+    ///
+    /// # Errors
+    /// The function will return an error if hardware initialization fails.
     pub fn new(led_count: u32, data_pin: Gpio13, channel: CHANNEL0) -> Result<Self> {
 
         let config = TransmitConfig::new().clock_divider(1);
@@ -51,7 +76,20 @@ impl<'d> WS2812<'d> {
         })
     }
 
-    pub fn write(&mut self, pixels: &[RGB8]) -> Result<()> {
+    fn rgb_to_u32(r: u8, g: u8, b: u8) -> u32 {
+        (b as u32) << 16 | (r as u32) << 8 | g as u32
+    }
+}
+
+impl<'d> RgbLedStrip for WS2812<'d> {
+    fn clear(&mut self) -> Result<()> {
+        let all_pixels_off = vec![BLACK; self.led_count.try_into()?];
+        self.write(&all_pixels_off)?;
+
+        Ok(())
+    }
+
+    fn write(&mut self, pixels: &[RGB8]) -> Result<()> {
         if pixels.len() > self.led_count.try_into()? {
             return Err(anyhow!("Provided buffer length {} bigger than available leds {}", pixels.len(), self.led_count));
         }
@@ -62,7 +100,7 @@ impl<'d> WS2812<'d> {
                 let color = Self::rgb_to_u32(pixel.r, pixel.g, pixel.b);
                 let bit = 2_u32.pow(i%24) & color != 0;
                 let pulse = if bit { self.high } else { self.low };
-                signal.push(&pulse);
+                signal.push(&pulse)?;
             }
         }
 
@@ -71,9 +109,5 @@ impl<'d> WS2812<'d> {
         .context("Rmt sending sequence failed")?;
 
         Ok(())
-    }
-
-    fn rgb_to_u32(r: u8, g: u8, b: u8) -> u32 {
-        (b as u32) << 16 | (r as u32) << 8 | g as u32
     }
 }
