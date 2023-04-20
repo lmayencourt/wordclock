@@ -13,6 +13,8 @@ use esp_idf_svc::sntp::EspSntp;
 use esp_idf_svc::sntp::SntpConf;
 use esp_idf_svc::sntp::SyncStatus;
 
+use crate::time::Time;
+
 #[derive(Debug)]
 enum NetworkTimeErrors {
     SyncTimeout,
@@ -85,19 +87,7 @@ pub fn get_epoch_time() -> i32 {
     now
 }
 
-pub struct NetworkTime {
-    second: u8,
-    minute: u8,
-    hour: u8,
-}
-
-impl std::fmt::Display for NetworkTime {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}:{}:{}", self.hour, self.minute, self.second)
-    }
-}
-
-pub fn get_time() -> NetworkTime {
+pub fn get_time() -> Time {
     let mut now: esp_idf_sys::time_t = 0;
     let mut time_info: esp_idf_sys::tm = Default::default();
     unsafe {
@@ -106,7 +96,7 @@ pub fn get_time() -> NetworkTime {
     }
 
     debug!("Time info is {:?}", time_info);
-    NetworkTime {
+    Time {
         second: time_info.tm_sec as u8,
         minute: time_info.tm_min as u8,
         hour: time_info.tm_hour as u8,

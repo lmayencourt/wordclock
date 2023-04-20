@@ -32,6 +32,7 @@ pub mod led_driver;
 pub mod network;
 pub mod network_time;
 pub mod persistent_settings;
+pub mod time;
 
 fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
