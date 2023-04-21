@@ -73,14 +73,20 @@ const BARN_WORD_LOOKUP_TABLE:[[usize; 3]; 3] =
         [8, 9, 3], // uhr
     ];
 
-/// Dots/progress lookup table.
-/// Stored as start_x, start_y, length
-const DOTS_LOOKUP_TABLE:[[usize; 2]; 4] =
+/// Red circle with cross sign.
+const ERROR_SIGN:[RGB8; 114] =
     [
-        [0, 1], // .
-        [0, 2], // . .
-        [0, 3], // . . .
-        [0, 4], // . . . .
+                                RED, RED, RED, RED,
+        BLACK, BLACK, RED, RED, BLACK, BLACK, BLACK, RED, RED, BLACK, BLACK,
+        BLACK, RED, RED, BLACK, BLACK, BLACK, BLACK, BLACK, RED, RED, BLACK,
+        RED, RED, BLACK, RED, BLACK, BLACK, BLACK, RED, BLACK, RED, RED,
+        RED, BLACK, BLACK, BLACK, RED, BLACK, RED, BLACK, BLACK, BLACK, RED,
+        RED, BLACK, BLACK, BLACK, BLACK, RED, BLACK, BLACK, BLACK, BLACK, RED,
+        RED, BLACK, BLACK, BLACK, RED, BLACK, RED, BLACK, BLACK, BLACK, RED,
+        RED, RED, BLACK, RED, BLACK, BLACK, BLACK, RED, BLACK, RED, RED,
+        BLACK, RED, RED, BLACK, BLACK, BLACK, BLACK, BLACK, RED, RED, BLACK,
+        BLACK, BLACK, RED, RED, BLACK, BLACK, BLACK, RED, RED, BLACK, BLACK,
+        BLACK, BLACK, BLACK, RED, RED, RED, RED, RED, BLACK, BLACK, BLACK,
     ];
 
 pub struct RgbLedStripMatrix<T: RgbLedStrip> {
@@ -222,5 +228,26 @@ impl<T: RgbLedStrip> Display for RgbLedStripMatrix<T> {
         self.draw_frame()?;
 
         Ok(())   
+    }
+
+    fn draw_error(&mut self) -> Result<()> {
+        self.new_frame();
+
+        self.frame = ERROR_SIGN;
+        self.draw_frame()?;
+
+        Ok(())
+    }
+
+    fn draw_progress(&mut self, progress:u8) -> Result<()> {
+        if progress > 4 {
+            return Err(anyhow!("Can't handle more than 4 levels"));
+        }
+
+        self.new_frame();
+        self.set_dots(0, progress as usize, BLUE);
+        self.draw_frame()?;
+
+        Ok(())
     }
 }

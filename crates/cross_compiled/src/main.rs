@@ -63,16 +63,23 @@ fn main() -> Result<()> {
 
     let led_driver = WS2812::new(114, peripherals.pins.gpio13, peripherals.rmt.channel0)?;
     let mut display = rgb_led_strip_matrix::RgbLedStripMatrix::new(led_driver)?;
+    display.draw_progress(1);
 
     let mut network = network::Network::new(peripherals.modem)?;
     let wifi_res = network.setup_and_connect(&config.ssid, &config.password);
+    display.draw_progress(2);
 
     match wifi_res {
         Ok(()) => info!("Connected to wifi!"),
         Err(err) => error!("Failed to connect: {}", err),
     }
 
-    network_time::init().expect("failed to get network time");
+    display.draw_progress(3);
+
+    if let Err(e) = network_time::init() {
+        display.draw_error()?;
+        return Err(e);
+    }
 
     loop {
         led.set_high().unwrap();

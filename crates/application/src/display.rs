@@ -15,4 +15,13 @@ pub trait Display {
 
     /// Draw the given time on the display.
     fn draw_time(&mut self, time: Time) -> Result<()>;
+
+    /// Draw an error sign on the display.
+    fn draw_error(&mut self) -> Result<()>;
+
+    /// Draw a progress bar, with 4 levels.
+    ///
+    /// # Errors
+    /// Fails early if progress higher than 4 is provided.
+    fn draw_progress(&mut self, progress:u8) -> Result<()>;
 }
