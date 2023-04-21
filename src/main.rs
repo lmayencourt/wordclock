@@ -25,9 +25,11 @@ use esp_idf_hal::prelude::*;
 
 use esp_idf_svc::systime::EspSystemTime;
 
+use crate::display::Display;
 use crate::led_driver::WS2812;
 use crate::persistent_settings::WifiConfiguration;
 
+pub mod display;
 pub mod led_driver;
 pub mod network;
 pub mod network_time;
@@ -59,9 +61,8 @@ fn main() -> Result<()> {
     let peripherals = Peripherals::take().unwrap();
     let mut led = PinDriver::output(peripherals.pins.gpio2)?;
 
-    info!("Set LEDS to organe");
-    let mut display = WS2812::new(3, peripherals.pins.gpio13, peripherals.rmt.channel0)?;
-    display.write(&[DARK_GOLDENROD, DARK_BLUE, DARK_CYAN, DARK_ORCHID])?;
+    let led_driver = WS2812::new(114, peripherals.pins.gpio13, peripherals.rmt.channel0)?;
+    let mut display = display::RgbLedStripMatrix::new(led_driver)?;
 
     let mut network = network::Network::new(peripherals.modem)?;
     let wifi_res = network.setup_and_connect(&config.ssid, &config.password);
@@ -71,10 +72,11 @@ fn main() -> Result<()> {
         Err(err) => error!("Failed to connect: {}", err),
     }
 
-    network_time::init()?;
+    network_time::init().expect("failed to get network time");
 
     loop {
         led.set_high().unwrap();
+        display.draw_time(network_time::get_time())?;
         thread::sleep(Duration::from_millis(500));
         led.set_low().unwrap();
         thread::sleep(Duration::from_millis(500));
