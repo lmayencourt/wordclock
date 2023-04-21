@@ -1,10 +1,11 @@
 [package]
-name = "application"
+authors = ["Louis Mayencourt <louis.mayencourt@gmail.com>"]
+name = "xtask"
 version = "0.1.0"
 edition = "2021"
-authors = ["louismayencourt <louis.mayencourt@gmail.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.0"
+anyhow = "1.0.38"
+xshell = "0.2.3"

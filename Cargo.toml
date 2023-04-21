@@ -3,8 +3,7 @@
 # Use a flat workspace for simplicity, as suggested in
 # https://matklad.github.io/2021/08/22/large-rust-workspaces.html
 members = [
-    # "crates/*"
-    "crates/application"
+    "crates/*"
 ]
 
 # Cross-compiled cartes is explicitely exlucded from the worksapce.
