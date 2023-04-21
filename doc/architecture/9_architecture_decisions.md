@@ -12,7 +12,7 @@ to achieve <quality q>,
 accepting <downside d>.
 ````
 
-## PCB: LEDs matrix for display
+## PCB 1: LEDs matrix for display
 In the context of designing a LEDs matrix for the *WordClock* display,
 facing the need to choose LEDs component,
 I decided to use WS2812 LEDs strip,
@@ -20,7 +20,7 @@ and neglected single LEDs or WS2812 LEDS,
 to achieve low-cost and simple PCB assembly,
 accepting the bigger dimension constraints of the LEDs strip.
 
-## PCB: LEDs matrix routing
+## PCB 2: LEDs matrix routing
 In the context of routing the LEDs matrix for the *WordClock* display,
 facing the need to place the WS2812 LEDs strips on the [PCB](12_glossary.md#PCB),
 I decided to keep the same layout as the *WordClock* hardware v1.0 (S like routing of the LEDs strips),
