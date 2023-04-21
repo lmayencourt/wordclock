@@ -39,9 +39,9 @@ const BARN_HOURS_LOOKUP_TABLE:[[usize; 3]; 12] =
 
 /// Index for minute lookup table
 const MIN_5:usize = 1;
-const MIN_10:usize = 2;
-const MIN_15:usize = 3;
-const MIN_20:usize = 4;
+const _MIN_10:usize = 2;
+const _MIN_15:usize = 3;
+const _MIN_20:usize = 4;
 const MIN_30:usize = 5;
 
 /// Minute to text lookup table for Bärn dialect.

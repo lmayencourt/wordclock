@@ -5,9 +5,8 @@
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result};
 use log::*;
-use smart_leds::colors::*;
 
 // use embedded_svc::{
 //     http::{
@@ -63,18 +62,18 @@ fn main() -> Result<()> {
 
     let led_driver = WS2812::new(114, peripherals.pins.gpio13, peripherals.rmt.channel0)?;
     let mut display = rgb_led_strip_matrix::RgbLedStripMatrix::new(led_driver)?;
-    display.draw_progress(1);
+    display.draw_progress(1)?;
 
     let mut network = network::Network::new(peripherals.modem)?;
     let wifi_res = network.setup_and_connect(&config.ssid, &config.password);
-    display.draw_progress(2);
+    display.draw_progress(2)?;
 
     match wifi_res {
         Ok(()) => info!("Connected to wifi!"),
         Err(err) => error!("Failed to connect: {}", err),
     }
 
-    display.draw_progress(3);
+    display.draw_progress(3)?;
 
     if let Err(e) = network_time::init() {
         display.draw_error()?;

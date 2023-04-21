@@ -2,7 +2,7 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
-use anyhow::{Result};
+use anyhow::Result;
 
 use crate::time::Time;
 
@@ -23,5 +23,5 @@ pub trait Display {
     ///
     /// # Errors
     /// Fails early if progress higher than 4 is provided.
-    fn draw_progress(&mut self, progress:u8) -> Result<()>;
+    fn draw_progress(&mut self, progress: u8) -> Result<()>;
 }
