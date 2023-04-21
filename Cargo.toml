@@ -1,31 +1,15 @@
-[package]
-name = "word_clock"
-version = "0.1.0"
-authors = ["louismayencourt <louis.mayencourt@gmail.com>"]
-edition = "2021"
-resolver = "2"
+[workspace]
 
-[profile.release]
-opt-level = "s"
+# Use a flat workspace for simplicity, as suggested in
+# https://matklad.github.io/2021/08/22/large-rust-workspaces.html
+members = [
+    # "crates/*"
+    "crates/application"
+]
 
-[profile.dev]
-debug = true # Symbols are nice and they don't increase the size on Flash
-opt-level = "z"
-
-[features]
-pio = ["esp-idf-sys/pio"]
-
-[dependencies]
-anyhow = "1.0.0"
-log = "0.4.17"
-smart-leds = { version = "0.3.0" }
-
-esp-idf-svc = {version = "0.45.0", features = ["experimental"]}
-esp-idf-sys = {version = "0.32", features = ["binstart"] }
-esp-idf-hal = "0.40"
-embedded-hal = "0.2"
-embedded-svc = {version = "0.24"}
-epd-waveshare = "0.5.0"
-
-[build-dependencies]
-embuild = "0.30.4"
+# Cross-compiled cartes is explicitely exlucded from the worksapce.
+# There is apparently no easy way to currently define different "target" 
+# for `cargo build`.
+# This implies that building the firmware must be performed from the
+# `cratest/cross_compiled` directory.
+exclude = ["crates/cross_compiled"]

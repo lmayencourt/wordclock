@@ -25,16 +25,16 @@ use esp_idf_hal::prelude::*;
 
 use esp_idf_svc::systime::EspSystemTime;
 
-use crate::display::Display;
 use crate::led_driver::WS2812;
 use crate::persistent_settings::WifiConfiguration;
 
-pub mod display;
+use application::display::Display;
+
+pub mod rgb_led_strip_matrix;
 pub mod led_driver;
 pub mod network;
 pub mod network_time;
 pub mod persistent_settings;
-pub mod time;
 
 fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
     let mut led = PinDriver::output(peripherals.pins.gpio2)?;
 
     let led_driver = WS2812::new(114, peripherals.pins.gpio13, peripherals.rmt.channel0)?;
-    let mut display = display::RgbLedStripMatrix::new(led_driver)?;
+    let mut display = rgb_led_strip_matrix::RgbLedStripMatrix::new(led_driver)?;
 
     let mut network = network::Network::new(peripherals.modem)?;
     let wifi_res = network.setup_and_connect(&config.ssid, &config.password);

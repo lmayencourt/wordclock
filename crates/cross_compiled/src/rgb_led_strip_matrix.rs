@@ -10,7 +10,8 @@ use smart_leds::colors::*;
 
 use crate::led_driver::RgbLedStrip;
 
-use crate::time::Time;
+use application::display::Display;
+use application::time::Time;
 
 /// LEDs matrix have a given size of 11x10 (+4 dots)
 /// Use `usize` type, as this value are only used for slice indexing
@@ -81,17 +82,6 @@ const DOTS_LOOKUP_TABLE:[[usize; 2]; 4] =
         [0, 3], // . . .
         [0, 4], // . . . .
     ];
-
-/// Interface to draw various things on a display.
-/// # Errors
-/// The functions will return an error if the hardware fails to carry the operation.
-pub trait Display {
-    /// Turn off all the pixels of display
-    fn clear(&mut self) -> Result<()>;
-
-    /// Draw the given time on the display.
-    fn draw_time(&mut self, time: Time) -> Result<()>;
-}
 
 pub struct RgbLedStripMatrix<T: RgbLedStrip> {
     driver: T,

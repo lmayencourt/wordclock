@@ -13,7 +13,7 @@ use esp_idf_svc::sntp::EspSntp;
 use esp_idf_svc::sntp::SntpConf;
 use esp_idf_svc::sntp::SyncStatus;
 
-use crate::time::Time;
+use application::time::Time;
 
 #[derive(Debug)]
 enum NetworkTimeErrors {
