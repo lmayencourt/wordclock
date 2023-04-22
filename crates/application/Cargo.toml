@@ -8,3 +8,4 @@ authors = ["louismayencourt <louis.mayencourt@gmail.com>"]
 
 [dependencies]
 anyhow = "1.0.0"
+regex = "1"
