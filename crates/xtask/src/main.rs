@@ -9,7 +9,9 @@ fn main() -> Result<(), anyhow::Error> {
     match &args[..] {
         ["build"] => build_target(),
         ["check"] => check_target(),
+        ["clean"] => clean_target(),
         ["flash"] => flash_target(),
+        ["doc"] => doc_target(),
         _ => {
             println!("USAGE cargo xtask [build|check]");
             Ok(())
@@ -31,9 +33,23 @@ fn check_target() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+fn clean_target() -> Result<(), anyhow::Error> {
+    let sh = Shell::new()?;
+    sh.change_dir("crates/cross_compiled");
+    cmd!(sh, "rustup run esp cargo clean").run()?;
+    Ok(())
+}
+
 fn flash_target() -> Result<(), anyhow::Error> {
     let sh = Shell::new()?;
     sh.change_dir("crates/cross_compiled");
     cmd!(sh, "espflash /dev/tty.usbserial-0001 target/xtensa-esp32-espidf/debug/cross_compiled --flash-freq 80M --flash-size 4MB --flash-mode DIO --speed 921600").run()?;
+    Ok(())
+}
+
+fn doc_target() -> Result<(), anyhow::Error> {
+    let sh = Shell::new()?;
+    sh.change_dir("crates/cross_compiled");
+    cmd!(sh, "rustup run esp cargo doc").run()?;
     Ok(())
 }

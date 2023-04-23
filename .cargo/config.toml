@@ -2,4 +2,6 @@
 xtask = 'run -p xtask --'
 xcheck = 'run -p xtask -- check'
 xbuild = 'run -p xtask -- build'
+xclean = 'run -p xtask -- clean'
 xflash = 'run -p xtask -- flash'
+xdoc = 'run -p xtask -- doc'

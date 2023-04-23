@@ -32,7 +32,7 @@ A [GitHub project](https://github.com/users/lmayencourt/projects/1/) is used for
 ````
 . ~/export-esp.sh
 cargo build
-espflash /dev/tty.usbserial-2110 target/xtensa-esp32-espidf/debug/hello-world --flash-freq 80M --flash-size 4MB --flash-mode DIO --speed 921600
+espflash /dev/tty.usbserial-0001 crates/cross_compiled/target/xtensa-esp32-espidf/debug/cross_compiled --flash-freq 80M --flash-size 4MB --flash-mode DIO --speed 921600
 espmonitor /dev/tty.usbserial-2110
 ````
 
