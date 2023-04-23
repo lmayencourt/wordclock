@@ -10,7 +10,6 @@ use embedded_svc::wifi;
 
 use esp_idf_hal::modem::*;
 use esp_idf_svc::wifi::*;
-// use esp_idf_svc::netif::*;
 use esp_idf_svc::eventloop::*;
 use esp_idf_svc::nvs::*;
 
@@ -62,4 +61,27 @@ impl<'a> Network<'a> {
 
         Ok(())
     }
+
+    pub fn connect(&mut self) -> Result<()> {
+        self.wifi.connect()?;
+
+        Ok(())
+    }
+
+    pub fn disconnect(&mut self) -> Result<()> {
+        self.wifi.disconnect()?;
+
+        Ok(())
+    }
+
+    pub fn is_connected(&mut self) -> bool {
+        match self.wifi.is_up() {
+            Ok(connected) => connected,
+            Err(e) => {
+                error!("Failed to get wifi status: {}", e);
+                return false
+            }
+        }
+    }
+
 }

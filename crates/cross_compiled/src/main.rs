@@ -74,6 +74,14 @@ fn main() -> Result<()> {
         Ok(()) => info!("Connected to wifi!"),
         Err(err) => error!("Failed to connect: {}", err),
     }
+    thread::sleep(Duration::from_millis(2000));
+    while network.is_connected() == false {
+        info!("Waiting for network connection...");
+        network.disconnect()?;
+        thread::sleep(Duration::from_millis(500));
+        network.connect()?;
+        thread::sleep(Duration::from_millis(4000));
+    }
 
     display.draw_progress(3)?;
 
