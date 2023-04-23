@@ -28,12 +28,14 @@ use crate::led_driver::WS2812;
 use crate::persistent_settings::WifiConfiguration;
 
 use application::display::Display;
+use application::version::Version;
 
-pub mod rgb_led_strip_matrix;
+pub mod firmware_update;
 pub mod led_driver;
 pub mod network;
 pub mod network_time;
 pub mod persistent_settings;
+pub mod rgb_led_strip_matrix;
 
 fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
@@ -79,6 +81,8 @@ fn main() -> Result<()> {
         display.draw_error()?;
         return Err(e);
     }
+
+    info!("available version {}", firmware_update::read_update_version()?);
 
     loop {
         led.set_high().unwrap();

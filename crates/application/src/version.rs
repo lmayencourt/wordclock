@@ -69,6 +69,10 @@ impl Version {
         }
     }
 
+    pub fn from_utf8(version:&[u8]) -> Result<Self> {
+        Self::from_string(std::str::from_utf8(version)?)
+    }
+
     /// Compare against the provided version
     ///
     /// Return `true` if provided version is older.
@@ -89,9 +93,9 @@ impl Version {
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(id) = &self.identifiers {
-            write!(f, "{}:{}:{}-{}", self.major, self.minor, self.patch, id)
+            write!(f, "v{}.{}.{}-{}", self.major, self.minor, self.patch, id)
         } else {
-            write!(f, "{}:{}:{}", self.major, self.minor, self.patch)
+            write!(f, "v{}.{}.{}", self.major, self.minor, self.patch)
         }
     }
 }
@@ -122,6 +126,15 @@ mod tests {
         assert_eq!(version.minor, 2);
         assert_eq!(version.patch, 3);
         assert_eq!(version.identifiers, Some(String::from("rc1")));
+    }
+
+    #[test]
+    fn from_utf8() {
+        let version = Version::from_utf8(b"2.0.1").unwrap();
+        assert_eq!(version.major, 2);
+        assert_eq!(version.minor, 0);
+        assert_eq!(version.patch, 1);
+        assert_eq!(version.identifiers, None);
     }
 
     #[test]
