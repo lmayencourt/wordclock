@@ -14,11 +14,10 @@ Essential features:
 
 ## Quality goals
 | ID | Quality | Motivation |
-| - | - | -|
-| QG1 | Accessible | The set of tools used to design the *WordClock* should be small. |
-| QG2 | Affordable | The cost to assemble a *WordClock* should be low.|
-| QG3 | Open | The design of all the part of the *WordClock* should be publicly available. |
-| QG4 | Testability | The architecture should allow easy testing of all main building blocks. |
+| - | - | - |
+| QG1 | Reliability | The system shall function reliably under any circumstances. |
+| QG2 | Autonomous | The system shall provide long up-time without human intervention. |
+| QG3 | Testability | The architecture should allow easy testing of all main building blocks. |
 
 ## Stakeholder
 | Stakeholder | Goal, Intentions |
