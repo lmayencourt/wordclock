@@ -12,8 +12,9 @@ fn main() -> Result<(), anyhow::Error> {
         ["clean"] => clean_target(),
         ["flash"] => flash_target(),
         ["doc"] => doc_target(),
+        ["uml"] => generate_uml_images(),
         _ => {
-            println!("USAGE cargo xtask [build|check]");
+            println!("USAGE cargo xtask [build|check|clean|flash|doc|uml]");
             Ok(())
         }
     }
@@ -50,6 +51,17 @@ fn flash_target() -> Result<(), anyhow::Error> {
 fn doc_target() -> Result<(), anyhow::Error> {
     let sh = Shell::new()?;
     sh.change_dir("crates/cross_compiled");
-    cmd!(sh, "rustup run esp cargo doc").run()?;
+    cmd!(sh, "rustup run esp cargo doc --open").run()?;
+    Ok(())
+}
+
+fn generate_uml_images() -> Result<(), anyhow::Error> {
+    let sh = Shell::new()?;
+    sh.change_dir("doc/uml");
+
+    let mut output_dir = sh.current_dir();
+    output_dir.push("exported");
+    cmd!(sh, "plantuml -png **.puml -o {output_dir}").run()?;
+
     Ok(())
 }
