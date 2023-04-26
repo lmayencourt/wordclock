@@ -8,7 +8,7 @@
 // Based on arc32 template document: https://docs.arc42.org/home/
 - [Draft Introduction and goals](./architecture/1_introduction_and_goals.md)
 - [Draft Constraints](./architecture/2_constraints.md)
-- [Draft Context and scope]()
+- [Draft Context and scope](./architecture/3_context_and_scope.md)
 - [Draft Solution strategy]()
 - [Draft Building block view]()
 - [Draft Runtime view]()
