@@ -1,7 +1,7 @@
 # Draft Context and scope
 
 ## Business context 
-![use-case](../uml/exported/buisness_context.png)
+![business_context](../uml/exported/business_context.png)
 
 ## Technical context
-<!-- ![use-case](../uml/exported/technical_context.png) -->
+![technical_context](../uml/exported/technical_context.png)

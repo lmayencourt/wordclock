@@ -1,0 +1,56 @@
+@startuml
+frame "Technical context" {
+
+together {
+    actor Owner
+    node "Owner device" as Owner_device << Device >>
+}
+
+actor "Embedded engineer" as Embedded_engineer
+file "Firmware binary" as Fw_binary << artifact >>
+
+node "WordClock hardware" as Clk_hw << Device >> {
+    port "Wi-Fi" as Wifi
+    port "Push-buttons" as Push_buttons
+
+    Node "ESP32 Devkit v1" as Esp32 << Device >> {
+        portout GPIO
+        node xtensa << System On Chip >> {
+            component Bootloader
+            component "WordClock firmware" as Clk_fw
+        }
+        ' database "Non volatile storage" as flash
+    }
+
+    component "LEDs matrix" as Led_matrix
+    component "Real Time Clock" as Rtc
+}
+
+node "Time server" as Ntp_server << Device >> {
+    component "Time service"
+}
+
+node "File server" as File_server << Device >> {
+    file "Firmware update" as Firmware_update << artifact >>
+}
+
+Bootloader -- Clk_fw
+
+GPIO -- Rtc: //<< protocol >>//  \nI2C
+GPIO --> Led_matrix: PWM
+
+Ntp_server -- Wifi: //<< protocol >>//  \nNTP
+
+Embedded_engineer .> Fw_binary: release
+Fw_binary ..> Firmware_update: << deploy >>
+File_server -- Wifi: //<< protocol >>//  \nHTTP 
+
+Firmware_update ..> Esp32: << deploy >>
+
+Owner .> Owner_device: uses
+Owner_device -- Wifi: //<< protocol >>//  \nHTML
+Owner ..> Push_buttons: press
+Owner ..> Led_matrix: observe
+
+}
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+frame "Business context" {
+
+node WordClock
+
+cloud Internet
+
+together {
+    actor Owner
+    actor "Embedded engineer" as embedded_engineer
+    Owner -[hidden]- embedded_engineer
+}
+
+Owner -> WordClock : Configuration
+Owner <- WordClock : Current time
+embedded_engineer -> WordClock : firmware
+    
+WordClock <- Internet : Current time
+WordClock <- Internet : Firmware update
+
+}
+@enduml
