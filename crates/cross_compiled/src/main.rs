@@ -92,6 +92,11 @@ fn main() -> Result<()> {
 
     info!("available version {}", firmware_update::read_update_version()?);
 
+    firmware_update::download_update()?;
+    info!("Update ready, restart device");
+    esp_idf_hal::delay::FreeRtos::delay_ms(5000);
+    firmware_update::reboot_to_new_image();
+
     loop {
         led.set_high().unwrap();
         display.draw_time(network_time::get_time())?;
