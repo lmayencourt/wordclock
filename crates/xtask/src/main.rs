@@ -1,5 +1,6 @@
 use std::env;
 
+use anyhow::anyhow;
 use xshell::{cmd, Shell};
 
 fn main() -> Result<(), anyhow::Error> {
@@ -13,8 +14,9 @@ fn main() -> Result<(), anyhow::Error> {
         "flash" => flash_target(&args[1..]),
         "doc" => doc_target(),
         "uml" => generate_uml_images(),
+        "generate_ota" => generate_ota_image(&args[1..]),
         _ => {
-            println!("USAGE cargo xtask [build|check|clean|flash|doc|uml]");
+            println!("USAGE cargo xtask [build|check|clean|flash|doc|uml|generate_ota]");
             Ok(())
         }
     }
@@ -64,6 +66,22 @@ fn generate_uml_images() -> Result<(), anyhow::Error> {
     output_dir.push("exported");
     cmd!(sh, "rm -rf exported").run()?;
     cmd!(sh, "plantuml -png **.puml -o {output_dir}").run()?;
+
+    Ok(())
+}
+
+fn generate_ota_image(args: &[&str]) -> Result<(), anyhow::Error> {
+    let sh = Shell::new()?;
+    let git_version = cmd!(sh, "git describe").read()?;
+    println!("Releasing firmware: {:?}", git_version);
+
+    let build_type:&str;
+    match &args[..] {
+        ["release"] => build_type = "release",
+        ["debug"] => build_type = "debug",
+        _ => return Err(anyhow!("Unsupported argument {:?}, must be [release|debug]", args)),
+    }
+    cmd!(sh, "espflash save-image ESP32 --flash-size 2MB crates/cross_compiled/target/xtensa-esp32-espidf/{build_type}/cross_compiled ota-test-img/ota_{git_version}.bin").run()?;
 
     Ok(())
 }
