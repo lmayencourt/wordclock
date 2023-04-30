@@ -62,7 +62,7 @@ fn main() -> Result<()> {
     let peripherals = Peripherals::take().unwrap();
     let mut led = PinDriver::output(peripherals.pins.gpio2)?;
 
-    let led_driver = WS2812::new(114, peripherals.pins.gpio13, peripherals.rmt.channel0)?;
+    let led_driver = WS2812::new(114, peripherals.pins.gpio15, peripherals.rmt.channel0)?;
     let mut display = rgb_led_strip_matrix::RgbLedStripMatrix::new(led_driver)?;
     display.draw_progress(1)?;
 

@@ -56,7 +56,7 @@ impl<'d> WS2812<'d> {
     ///
     /// # Errors
     /// The function will return an error if hardware initialization fails.
-    pub fn new(led_count: u32, data_pin: Gpio13, channel: CHANNEL0) -> Result<Self> {
+    pub fn new(led_count: u32, data_pin: Gpio15, channel: CHANNEL0) -> Result<Self> {
 
         let config = TransmitConfig::new().clock_divider(1);
         let tx_rmt = TxRmtDriver::new(channel, data_pin, &config)
