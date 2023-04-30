@@ -64,6 +64,15 @@ fn main() -> Result<()> {
 
     let led_driver = WS2812::new(114, peripherals.pins.gpio15, peripherals.rmt.channel0)?;
     let mut display = rgb_led_strip_matrix::RgbLedStripMatrix::new(led_driver)?;
+
+    // Display check
+    // for n in 0..1 {
+    //     display.draw_all()?;
+    //     thread::sleep(Duration::from_millis(1000));
+    //     display.clear()?;
+    //     thread::sleep(Duration::from_millis(2000));
+    // }
+
     display.draw_progress(1)?;
 
     let mut network = network::Network::new(peripherals.modem)?;

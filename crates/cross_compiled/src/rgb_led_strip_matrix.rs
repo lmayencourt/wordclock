@@ -151,6 +151,14 @@ impl<T: RgbLedStrip> RgbLedStripMatrix<T>
         self.frame = [BLACK; LEDS_MATRIX_PIXEL_COUNT];
     }
 
+    pub fn draw_all(&mut self) -> Result<()>{
+        self.new_frame();
+        self.frame = [RGB8{r:1, g:0, b:0}; LEDS_MATRIX_PIXEL_COUNT];
+        self.draw_frame()?;
+
+        Ok(())
+    }
+
 }
 
 impl<T: RgbLedStrip> Display for RgbLedStripMatrix<T> {
