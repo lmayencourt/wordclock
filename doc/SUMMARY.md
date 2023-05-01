@@ -10,7 +10,7 @@
 - [Draft Constraints](./architecture/2_constraints.md)
 - [Draft Context and scope](./architecture/3_context_and_scope.md)
 - [Draft Solution strategy]()
-- [Draft Building block view]()
+- [Draft Building block view](./architecture/5_building_block_view.md)
 - [Draft Runtime view]()
 - [Draft Deployment view]()
 - [Draft Crosscutting concepts]()
