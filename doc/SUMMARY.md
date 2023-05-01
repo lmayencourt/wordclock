@@ -12,7 +12,7 @@
 - [Draft Solution strategy]()
 - [Draft Building block view](./architecture/5_building_block_view.md)
 - [Draft Runtime view]()
-- [Draft Deployment view]()
+- [Draft Deployment view](./architecture/7_deployment_view.md)
 - [Draft Crosscutting concepts]()
 - [Draft Architecture decisions](./architecture/9_architecture_decisions.md)
 - [Draft Quality]()
