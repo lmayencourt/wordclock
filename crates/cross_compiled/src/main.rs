@@ -24,18 +24,15 @@ use esp_idf_hal::prelude::*;
 
 use esp_idf_svc::systime::EspSystemTime;
 
-use crate::led_driver::WS2812;
-use crate::persistent_settings::WifiConfiguration;
-
 use application::display::Display;
 // use application::version::Version;
 
-pub mod firmware_update;
-pub mod led_driver;
-pub mod network;
-pub mod network_time;
-pub mod persistent_settings;
-pub mod rgb_led_strip_matrix;
+use cross_compiled::firmware_update;
+use cross_compiled::led_driver::WS2812;
+use cross_compiled::network;
+use cross_compiled::network_time;
+use cross_compiled::persistent_settings::WifiConfiguration;
+use cross_compiled::rgb_led_strip_matrix;
 
 fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
