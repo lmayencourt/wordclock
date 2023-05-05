@@ -1,3 +1,6 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 Louis Mayencourt
+ */
 
 /// Possible state of the device
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -30,7 +33,9 @@ pub struct Behaviour {
 
 impl Behaviour {
     pub fn new() -> Self {
-        Self {state: State::Startup}
+        Self {
+            state: State::Startup,
+        }
     }
 
     /// React to a given event

@@ -28,7 +28,7 @@ use crate::led_driver::WS2812;
 use crate::persistent_settings::WifiConfiguration;
 
 use application::display::Display;
-use application::version::Version;
+// use application::version::Version;
 
 pub mod firmware_update;
 pub mod led_driver;
@@ -44,6 +44,17 @@ fn main() -> Result<()> {
 
     esp_idf_svc::log::EspLogger::initialize_default();
     info!("Hello, ESP32 world!");
+    // info!("OTA successful!");
+    // let peripherals = Peripherals::take().unwrap();
+    // let mut led = PinDriver::output(peripherals.pins.gpio2)?;
+    // loop {
+    //     led.set_high().unwrap();
+    //     thread::sleep(Duration::from_millis(500));
+    //     led.set_low().unwrap();
+    //     thread::sleep(Duration::from_millis(500));
+    // }
+
+    // info!("Running WordClock firmware {}", Version::from_string("99.99.1")?);
 
     let mut config;
 

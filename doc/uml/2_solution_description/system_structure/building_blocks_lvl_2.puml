@@ -12,7 +12,7 @@ component "WordClock Firmware" as clk_fw{
             interface Display
             interface PersistentStorage
             interface Network
-            interface SystemTime
+            interface TimeSource
             interface FirmwareUpdate
         }
     }
@@ -38,16 +38,17 @@ Behaviour ..> Network: use
 Behaviour ..> Display: use
 Behaviour ..> Version: use
 Behaviour ..> FirmwareUpdate: use
-Time ..> SystemTime: use
+Behaviour ..> TimeSource: use
+Time <.. TimeSource: use
 Configuration ..> PersistentStorage: use
 Version <.. FirmwareUpdate: use
 
-Display ..> RgbLedStripMatrix: use
+Display <|-- RgbLedStripMatrix
 RgbLedStripMatrix ..> LedDriver: use
-PersistentStorage ..> NVS: use
-Network ..> WiFi: use
-SystemTime ..> NTP: use
-SystemTime ..> RTC: use
+PersistentStorage <|-- NVS
+Network <|-- WiFi
+TimeSource <|-- NTP
+TimeSource <|-- RTC
 FirmwareUpdate ..> OTA: use
 FirmwareUpdate ..> HttpClient: use
 

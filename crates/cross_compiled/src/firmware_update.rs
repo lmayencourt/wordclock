@@ -105,8 +105,8 @@ pub fn read_update_version() -> Result<Version> {
 
 pub fn download_update() -> Result<()> {
     let mut ota_write_data: [u8; WRITE_DATA_BUF_SIZE] = [0; WRITE_DATA_BUF_SIZE];
-    let mut invalid_fw_version: String = String::new();
-    let mut found_invalid_fw = false;
+    let invalid_fw_version: String = String::new();
+    let found_invalid_fw = false;
     let mut update_summary: String = String::new();
     let certificate = esp_idf_svc::tls::X509::pem_until_nul(ROOT_CA_CERTIFICATE);
 

@@ -69,7 +69,7 @@ impl Version {
         }
     }
 
-    pub fn from_utf8(version:&[u8]) -> Result<Self> {
+    pub fn from_utf8(version: &[u8]) -> Result<Self> {
         Self::from_string(std::str::from_utf8(version)?)
     }
 

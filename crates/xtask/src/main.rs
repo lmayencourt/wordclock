@@ -75,11 +75,16 @@ fn generate_ota_image(args: &[&str]) -> Result<(), anyhow::Error> {
     let git_version = cmd!(sh, "git describe").read()?;
     println!("Releasing firmware: {:?}", git_version);
 
-    let build_type:&str;
+    let build_type: &str;
     match &args[..] {
         ["release"] => build_type = "release",
         ["debug"] => build_type = "debug",
-        _ => return Err(anyhow!("Unsupported argument {:?}, must be [release|debug]", args)),
+        _ => {
+            return Err(anyhow!(
+                "Unsupported argument {:?}, must be [release|debug]",
+                args
+            ))
+        }
     }
     cmd!(sh, "espflash save-image ESP32 --flash-size 2MB crates/cross_compiled/target/xtensa-esp32-espidf/{build_type}/cross_compiled ota-test-img/ota_{git_version}.bin").run()?;
 

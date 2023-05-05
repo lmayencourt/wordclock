@@ -1,7 +1,11 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 Louis Mayencourt
+ */
+
 use anyhow::Result;
 
-use application::*;
 use application::behaviour::*;
+use application::*;
 
 #[derive(PartialEq, Debug)]
 enum FakeDisplayState {
@@ -50,18 +54,29 @@ impl time_source::TimeSource for MockTime {
 }
 
 #[test]
-fn build_and_run() {
-    let display = FakeDisplay{state:FakeDisplayState::Clean};
-    let time_source = MockTime{curent:time::Time::new(11, 22, 33).unwrap()};
+fn display_time() {
+    let display = FakeDisplay {
+        state: FakeDisplayState::Clean,
+    };
+    let time_source = MockTime {
+        curent: time::Time::new(11, 22, 33).unwrap(),
+    };
     let mut app = Application::new(display, time_source);
     assert_eq!(app.display.state, FakeDisplayState::Clean);
 
     app.publish_event(Event::ValidConfiguration);
     app.run();
-    assert_eq!(app.display.state, FakeDisplayState::Time(time::Time { hour: 11, minute: 22, second: 33 }));
+    assert_eq!(
+        app.display.state,
+        FakeDisplayState::Time(time::Time::new(11, 22, 33).unwrap())
+    );
 
-    app.time_source.set_time(time::Time::new(11, 23, 33).unwrap());
+    app.time_source
+        .set_time(time::Time::new(11, 23, 33).unwrap());
     app.publish_event(Event::Tick);
     app.run();
-    assert_eq!(app.display.state, FakeDisplayState::Time(time::Time { hour: 11, minute: 23, second: 33 }));
+    assert_eq!(
+        app.display.state,
+        FakeDisplayState::Time(time::Time::new(11, 23, 33).unwrap())
+    );
 }

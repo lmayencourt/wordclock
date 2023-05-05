@@ -1,11 +1,15 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 Louis Mayencourt
+ */
+
 use behaviour::*;
 use display::Display;
 use time_source::TimeSource;
 
 pub mod behaviour;
 pub mod display;
-pub mod time_source;
 pub mod time;
+pub mod time_source;
 pub mod version;
 
 pub struct Application<D: Display, T: TimeSource> {
@@ -15,7 +19,7 @@ pub struct Application<D: Display, T: TimeSource> {
     event_queue: Vec<Event>,
 }
 
-impl<D:Display, T:TimeSource> Application<D, T> {
+impl<D: Display, T: TimeSource> Application<D, T> {
     pub fn new(mut display: D, time_source: T) -> Self {
         display.clear().unwrap();
         Application {
@@ -26,16 +30,16 @@ impl<D:Display, T:TimeSource> Application<D, T> {
         }
     }
 
-    pub fn publish_event(&mut self, event:Event) {
+    pub fn publish_event(&mut self, event: Event) {
         self.event_queue.push(event);
     }
 
     pub fn run(&mut self) {
         // loop {
-            if let Some(event) = self.event_queue.pop() {
-                self.behaviour.handle_event(event);
-                self.state_action();
-            }
+        if let Some(event) = self.event_queue.pop() {
+            self.behaviour.handle_event(event);
+            self.state_action();
+        }
         // }
     }
 
