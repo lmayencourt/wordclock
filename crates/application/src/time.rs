@@ -6,6 +6,7 @@ use anyhow::{anyhow, Result};
 use std::fmt;
 
 /// Time representation
+#[derive(PartialEq, Debug)]
 pub struct Time {
     pub hour: u8,
     pub minute: u8,
