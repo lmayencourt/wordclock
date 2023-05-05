@@ -1,48 +1,67 @@
+use anyhow::Result;
 
 use application::*;
 use application::behaviour::*;
 
 #[derive(PartialEq, Debug)]
-enum DummyDisplayState {
+enum FakeDisplayState {
     Clean,
     Progress(u8),
     Error,
     Time(time::Time),
 }
-struct DummyDisplay {
-    state: DummyDisplayState,
+struct FakeDisplay {
+    state: FakeDisplayState,
 }
 
-impl display::Display for DummyDisplay {
+impl display::Display for FakeDisplay {
     fn clear(&mut self) -> anyhow::Result<()> {
-        self.state = DummyDisplayState::Clean;
+        self.state = FakeDisplayState::Clean;
         Ok(())
     }
     fn draw_error(&mut self) -> anyhow::Result<()> {
-        self.state = DummyDisplayState::Error;
+        self.state = FakeDisplayState::Error;
         Ok(())
     }
     fn draw_progress(&mut self, progress: u8) -> anyhow::Result<()> {
-        self.state = DummyDisplayState::Progress(progress);
+        self.state = FakeDisplayState::Progress(progress);
         Ok(())
     }
     fn draw_time(&mut self, time: time::Time) -> anyhow::Result<()> {
-        self.state = DummyDisplayState::Time(time);
+        self.state = FakeDisplayState::Time(time);
         Ok(())
+    }
+}
+
+struct MockTime {
+    curent: time::Time,
+}
+
+impl MockTime {
+    fn set_time(&mut self, time: time::Time) {
+        self.curent = time;
+    }
+}
+
+impl time_source::TimeSource for MockTime {
+    fn get_time(&self) -> Result<time::Time> {
+        Ok(self.curent)
     }
 }
 
 #[test]
 fn build_and_run() {
-    let display = DummyDisplay{state:DummyDisplayState::Clean};
-    let mut app = Application::new(display);
-    assert_eq!(app.display.state, DummyDisplayState::Clean);
+    let display = FakeDisplay{state:FakeDisplayState::Clean};
+    let time_source = MockTime{curent:time::Time::new(11, 22, 33).unwrap()};
+    let mut app = Application::new(display, time_source);
+    assert_eq!(app.display.state, FakeDisplayState::Clean);
 
-    app.publish_event(Transition::ValidConfiguration);
+    app.publish_event(Event::ValidConfiguration);
     app.run();
-    assert_eq!(app.display.state, DummyDisplayState::Time(time::Time { hour: 11, minute: 22, second: 33 }));
+    assert_eq!(app.display.state, FakeDisplayState::Time(time::Time { hour: 11, minute: 22, second: 33 }));
 
-    // app.publish_event(Transition::Tick);
-    // app.run();
-    // assert_eq!(app.display.state, DummyDisplayState::Time(time::Time { hour: 11, minute: 23, second: 33 }));
+    app.time_source.set_time(time::Time::new(11, 23, 33).unwrap());
+    app.publish_event(Event::Tick);
+    app.run();
+    assert_eq!(app.display.state, FakeDisplayState::Time(time::Time { hour: 11, minute: 23, second: 33 }));
 }

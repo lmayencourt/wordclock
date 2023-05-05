@@ -1,22 +1,26 @@
 use behaviour::*;
 use display::Display;
+use time_source::TimeSource;
 
 pub mod behaviour;
 pub mod display;
+pub mod time_source;
 pub mod time;
 pub mod version;
 
-pub struct Application<D: Display> {
+pub struct Application<D: Display, T: TimeSource> {
     pub display: D,
+    pub time_source: T,
     behaviour: Behaviour,
     event_queue: Vec<Event>,
 }
 
-impl<D:Display> Application<D> {
-    pub fn new(mut display: D) -> Self {
+impl<D:Display, T:TimeSource> Application<D, T> {
+    pub fn new(mut display: D, time_source: T) -> Self {
         display.clear().unwrap();
         Application {
             display,
+            time_source,
             behaviour: Behaviour::new(),
             event_queue: vec![],
         }
@@ -49,7 +53,7 @@ impl<D:Display> Application<D> {
     }
 
     fn displayTime(&mut self) {
-        let time = time::Time::new(11, 22, 33).unwrap();
+        let time = self.time_source.get_time().unwrap();
         let _ = self.display.draw_time(time);
     }
 
