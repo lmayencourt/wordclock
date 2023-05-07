@@ -9,7 +9,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     match args[0] {
         "build" => build_target(&args[1..]),
-        "check" => check_target(),
+        "check" => check_target(&args[1..]),
         "clean" => clean_target(),
         "flash" => flash_target(&args[1..]),
         "doc" => doc_target(),
@@ -29,10 +29,10 @@ fn build_target(args: &[&str]) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn check_target() -> Result<(), anyhow::Error> {
+fn check_target(args: &[&str]) -> Result<(), anyhow::Error> {
     let sh = Shell::new()?;
     sh.change_dir("crates/cross_compiled");
-    cmd!(sh, "rustup run esp cargo check").run()?;
+    cmd!(sh, "rustup run esp cargo check {args...}").run()?;
     Ok(())
 }
 
