@@ -12,7 +12,7 @@ state Started {
 }
 state Error
 
-[*] --> Startup
+[*] --> Startup: Start
 
 Startup --> Configuration: InvalidConfiguration
 Startup --> Started: ValidConfiguration

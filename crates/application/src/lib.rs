@@ -54,7 +54,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage> Application<D, T, S> {
     pub fn state_action(&mut self) {
         match self.behaviour.current_state() {
             State::Startup => self.startup(),
-            State::DisplayTime => self.displayTime(),
+            State::DisplayTime => self.display_time(),
             _ => self.error(),
         }
     }
@@ -77,7 +77,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage> Application<D, T, S> {
         }
     }
 
-    fn displayTime(&mut self) {
+    fn display_time(&mut self) {
         let time = self.time_source.get_time().unwrap();
         info!("Displaying time: {}", time);
 

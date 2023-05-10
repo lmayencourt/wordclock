@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 
 use application::behaviour::*;
-use application::configuration::{Configuration, PersistentStorage};
+use application::configuration::Configuration;
 use application::*;
 
 #[derive(PartialEq, Debug)]
