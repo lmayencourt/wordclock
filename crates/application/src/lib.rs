@@ -55,6 +55,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage> Application<D, T, S> {
         match self.behaviour.current_state() {
             State::Startup => self.startup(),
             State::DisplayTime => self.display_time(),
+            State::Configuration => self.configuration(),
             _ => self.error(),
         }
     }
@@ -74,6 +75,22 @@ impl<D: Display, T: TimeSource, S: PersistentStorage> Application<D, T, S> {
         } else {
             warn!("No valid configuration in persistent storage");
             self.publish_event(Event::InvalidConfiguration);
+        }
+    }
+
+    fn configuration(&mut self) {
+        info!("Configuration");
+        let _ = self.display.draw_progress(2);
+
+        if self.configuration.is_valid() {
+            self.publish_event(Event::ValidConfiguration);
+        } else {
+            // todo!("Start configuration server");
+            warn!("Use hard-coded config!");
+            let hard_coded_config = Configuration::new(env!("RUST_ESP32_WIFI_SSID").to_string(), env!("RUST_ESP32_WIFI_PASSWORD").to_string() );
+            self.configuration = hard_coded_config;
+            // let _ = self.configuration_manager.store_to_persistent_storage(self.configuration.clone());
+            self.publish_event(Event::ValidConfiguration);
         }
     }
 

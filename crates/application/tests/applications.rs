@@ -140,6 +140,27 @@ fn valid_config_start_displaying_time() {
     app.publish_event(Event::Start);
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);
+    assert!(app.configuration.is_valid());
+
+    app.run();
+    assert_eq!(app.get_current_state(), State::DisplayTime);
+}
+
+#[test]
+fn valid_config_from_configuration_start_displaying_time() {
+    let mut app = get_application();
+    assert!(app.configuration.is_invalid());
+
+    app.publish_event(Event::Start);
+    app.run();
+    assert_eq!(app.get_current_state(), State::Startup);
+
+    app.run();
+    assert_eq!(app.get_current_state(), State::Configuration);
+    let configuration = Configuration::new(String::from("home wifi"), String::from("secret"));
+    app.configuration_manager
+        .store_to_persistent_storage(configuration)
+        .unwrap();
 
     app.run();
     assert_eq!(app.get_current_state(), State::DisplayTime);

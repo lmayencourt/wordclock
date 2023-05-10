@@ -14,12 +14,14 @@ struct ConfigurationFields {
     password: String,
 }
 
+#[derive(Clone)]
 enum ConfigurationState {
     Invalid,
     Valid(ConfigurationFields),
 }
 
 /// Device configuration data type, representing validity and configuration fields.
+#[derive(Clone)]
 pub struct Configuration {
     state: ConfigurationState,
 }
