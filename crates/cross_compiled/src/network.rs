@@ -13,7 +13,9 @@ use esp_idf_svc::wifi::*;
 use esp_idf_svc::eventloop::*;
 use esp_idf_svc::nvs::*;
 
-pub struct Network<'a> {
+use application::network::Network;
+
+pub struct WifiNetwork<'a> {
     wifi: EspWifi<'a>,
 }
 
@@ -30,7 +32,7 @@ impl std::fmt::Display for WifiErrors {
     }
 }
 
-impl<'a> Network<'a> {
+impl<'a> WifiNetwork<'a> {
     pub fn new(modem: Modem) -> Result<Self, EspError> {
         let sys_loop_stack = EspSystemEventLoop::take()?;
         let nvs = EspDefaultNvsPartition::take().ok();
@@ -61,20 +63,22 @@ impl<'a> Network<'a> {
 
         Ok(())
     }
+}
 
-    pub fn connect(&mut self) -> Result<()> {
+impl<'a> Network for WifiNetwork<'a> {
+    fn connect(&mut self) -> Result<()> {
         self.wifi.connect()?;
 
         Ok(())
     }
 
-    pub fn disconnect(&mut self) -> Result<()> {
+    fn disconnect(&mut self) -> Result<()> {
         self.wifi.disconnect()?;
 
         Ok(())
     }
 
-    pub fn is_connected(&mut self) -> bool {
+    fn is_connected(&self) -> bool {
         match self.wifi.is_up() {
             Ok(connected) => connected,
             Err(e) => {
