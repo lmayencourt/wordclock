@@ -5,6 +5,7 @@
 /// Possible state of the device
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum State {
+    Created,
     Startup,
     DisplayTime,
     Configuration,
@@ -15,6 +16,7 @@ pub enum State {
 
 /// Possible event that may trigger a state transition of the device.
 pub enum Event {
+    Start,
     InvalidConfiguration,
     ValidConfiguration,
     Tick,
@@ -34,13 +36,14 @@ pub struct Behaviour {
 impl Behaviour {
     pub fn new() -> Self {
         Self {
-            state: State::Startup,
+            state: State::Created,
         }
     }
 
     /// React to a given event
     pub fn handle_event(&mut self, event: Event) {
         match (&self.state, event) {
+            (State::Created, Event::Start) => self.state = State::Startup,
             (State::Startup, Event::InvalidConfiguration) => self.state = State::Configuration,
             (State::Startup, Event::ValidConfiguration) => self.state = State::DisplayTime,
             (State::Configuration, Event::ValidConfiguration) => self.state = State::DisplayTime,
@@ -67,6 +70,9 @@ mod tests {
     #[test]
     fn handle_events() {
         let mut state_machine = Behaviour::new();
+        assert_eq!(state_machine.state, State::Created);
+
+        state_machine.handle_event(Event::Start);
         assert_eq!(state_machine.state, State::Startup);
 
         state_machine.handle_event(Event::InvalidConfiguration);
