@@ -76,7 +76,36 @@ impl configuration::PersistentStorage for FakePersistentStorage {
     }
 }
 
-fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage> {
+struct FakeNetwork {
+    is_configured: bool,
+    is_connected: bool,
+}
+
+impl network::Network for FakeNetwork {
+    fn configure(&mut self, _ssid: &str, _password: &str) {
+        self.is_configured = true;
+    }
+
+    fn connect(&mut self) -> Result<()> {
+        if self.is_configured == false {
+            return Err(anyhow!("Network not configured properly"));
+        }
+
+        self.is_connected = true;
+        Ok(())
+    }
+
+    fn disconnect(&mut self) -> Result<()> {
+        self.is_connected = false;
+        Ok(())
+    }
+
+    fn is_connected(&self) -> bool {
+        self.is_connected
+    }
+}
+
+fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork> {
     let display = FakeDisplay {
         state: FakeDisplayState::Clean,
     };
@@ -86,20 +115,41 @@ fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage
     let persistent_storage = FakePersistentStorage {
         string_storage: HashMap::new(),
     };
-    Application::new(display, time_source, persistent_storage)
+    let network = FakeNetwork {
+        is_configured: false,
+        is_connected: false,
+    };
+
+    Application::new(display, time_source, persistent_storage, network)
+}
+
+fn run_startup(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
+    assert_eq!(app.get_current_state(), State::Initial);
+    app.publish_event(Event::Init);
+    app.run();
+    assert_eq!(app.get_current_state(), State::Startup);
+}
+
+fn preset_configuration(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
+    let configuration = Configuration::new(String::from("home wifi"), String::from("secret"));
+    app.configuration_manager
+        .store_to_persistent_storage(configuration)
+        .unwrap();
+}
+
+fn goto_display_time(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
+    preset_configuration(app);
+    run_startup(app);
+    app.run();
+    assert_eq!(app.get_current_state(), State::DisplayTime);
 }
 
 #[test]
 fn display_time() {
     let mut app = get_application();
     assert_eq!(app.display.state, FakeDisplayState::Clean);
+    goto_display_time(&mut app);
 
-    app.publish_event(Event::Start);
-    app.run();
-    assert_eq!(app.get_current_state(), State::Startup);
-
-    app.publish_event(Event::ValidConfiguration);
-    app.run();
     assert_eq!(
         app.display.state,
         FakeDisplayState::Time(time::Time::new(11, 22, 33).unwrap())
@@ -120,9 +170,7 @@ fn invalid_config_start_configuration() {
     let mut app = get_application();
     assert!(app.configuration.is_invalid());
 
-    app.publish_event(Event::Start);
-    app.run();
-    assert_eq!(app.get_current_state(), State::Startup);
+    run_startup(&mut app);
 
     app.run();
     assert_eq!(app.get_current_state(), State::Configuration);
@@ -131,15 +179,10 @@ fn invalid_config_start_configuration() {
 #[test]
 fn valid_config_start_displaying_time() {
     let mut app = get_application();
-    let configuration = Configuration::new(String::from("home wifi"), String::from("secret"));
-    app.configuration_manager
-        .store_to_persistent_storage(configuration)
-        .unwrap();
+    preset_configuration(&mut app);
     assert!(app.configuration.is_invalid());
 
-    app.publish_event(Event::Start);
-    app.run();
-    assert_eq!(app.get_current_state(), State::Startup);
+    run_startup(&mut app);
     assert!(app.configuration.is_valid());
 
     app.run();
@@ -151,17 +194,26 @@ fn valid_config_from_configuration_start_displaying_time() {
     let mut app = get_application();
     assert!(app.configuration.is_invalid());
 
-    app.publish_event(Event::Start);
+    run_startup(&mut app);
+
+    app.run();
+    assert_eq!(app.get_current_state(), State::Configuration);
+    preset_configuration(&mut app);
+
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);
 
     app.run();
-    assert_eq!(app.get_current_state(), State::Configuration);
-    let configuration = Configuration::new(String::from("home wifi"), String::from("secret"));
-    app.configuration_manager
-        .store_to_persistent_storage(configuration)
-        .unwrap();
-
-    app.run();
     assert_eq!(app.get_current_state(), State::DisplayTime);
+}
+
+#[test]
+fn network_is_ready_in_display_time() {
+    let mut app = get_application();
+    // // app.time_source.set_time(None);
+    assert_eq!(app.network.is_connected, false);
+    goto_display_time(&mut app);
+
+    assert!(app.network.is_configured);
+    assert!(app.network.is_connected);
 }

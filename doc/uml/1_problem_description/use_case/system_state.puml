@@ -12,19 +12,19 @@ state Started {
 }
 state Error
 
-[*] --> Startup: Start
+[*] --> Startup: Init
 
 Startup --> Configuration: InvalidConfiguration
-Startup --> Started: ValidConfiguration
+Startup --> Started: Start
 
 state Started {
-    Configuration --> DisplayTime: ValidConfiguration
+    Configuration -> Startup: ValidConfiguration
 
     [*] --> DisplayTime
     DisplayTime --> Menu: EnterMenu
     Menu --> Menu: NextMenu
     Menu --> DisplayTime: ExitMenu
-    Menu -up-> Configuration: EraseConfiguration
+    Menu -up-> Startup: EraseConfiguration
 
     DisplayTime --> Idle: GoToSleep
     DisplayTime <-- Idle: Wakeup
