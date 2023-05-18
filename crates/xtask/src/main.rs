@@ -7,6 +7,11 @@ fn main() -> Result<(), anyhow::Error> {
     let args = env::args().skip(1).collect::<Vec<_>>();
     let args = args.iter().map(|s| &**s).collect::<Vec<_>>();
 
+    if args.len() == 0 {
+        usage();
+        return Err(anyhow!("No argument provided"));
+    }
+
     match args[0] {
         "build" => build_target(&args[1..]),
         "check" => check_target(&args[1..]),
@@ -16,10 +21,14 @@ fn main() -> Result<(), anyhow::Error> {
         "uml" => generate_uml_images(),
         "generate_ota" => generate_ota_image(&args[1..]),
         _ => {
-            println!("USAGE cargo xtask [build|check|clean|flash|doc|uml|generate_ota]");
+            usage();
             Ok(())
         }
     }
+}
+
+fn usage() {
+    println!("USAGE cargo xtask [build|check|clean|flash|doc|uml|generate_ota]");
 }
 
 fn build_target(args: &[&str]) -> Result<(), anyhow::Error> {
