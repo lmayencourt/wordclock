@@ -52,11 +52,10 @@ fn main() -> Result<()> {
 
     let mut network = network::WifiNetwork::new(peripherals.modem)?;
 
-    // Test network connection in main as integration test doesn't work..
-    network.configure(env!("RUST_ESP32_WIFI_SSID"), env!("RUST_ESP32_WIFI_PASSWORD"))?;
-    network.connect()?;
-    assert!(network.is_connected());
-    info!("Initial connection done!");
+    // Needed for now to avoid wifi error:
+    // E (2691) phy_init: esp_phy_load_cal_data_from_nvs: NVS has not been initialized. Call nvs_flash_init before starting WiFi/BT.
+    network.configure("dummy","1234")?;
+    network.fake_connect()?;
 
     let time_source = network_time::NetworkTime::new();
 

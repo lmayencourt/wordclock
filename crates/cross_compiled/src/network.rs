@@ -68,6 +68,14 @@ impl<'a> WifiNetwork<'a> {
 
         Ok(())
     }
+
+    pub fn fake_connect(&mut self) -> Result<()> {
+        self.wifi.connect()?;
+        thread::sleep(Duration::from_millis(500));
+        self.wifi.disconnect()?;
+        Ok(())
+    }
+
 }
 
 impl<'a> Network for WifiNetwork<'a> {
@@ -90,14 +98,14 @@ impl<'a> Network for WifiNetwork<'a> {
 
     fn connect(&mut self) -> Result<()> {
         self.wifi.connect()?;
-        thread::sleep(Duration::from_millis(10000));
+        thread::sleep(Duration::from_millis(2000));
 
         while self.is_connected() == false {
             info!("Waiting for network connection...");
-            self.disconnect()?;
+            self.wifi.disconnect()?;
             thread::sleep(Duration::from_millis(500));
-            self.connect()?;
-            thread::sleep(Duration::from_millis(10000));
+            self.wifi.connect()?;
+            thread::sleep(Duration::from_millis(2000));
         }
 
         Ok(())
