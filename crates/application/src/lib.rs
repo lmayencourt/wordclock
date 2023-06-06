@@ -49,6 +49,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
     pub fn run(&mut self) {
         // loop {
         if let Some(event) = self.event_queue.pop() {
+            info!("Handling event {:?}", event);
             self.behaviour.handle_event(event);
             self.state_action();
         }
@@ -56,12 +57,14 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
     }
 
     pub fn state_action(&mut self) {
+        info!("Executing {:?} action", self.behaviour.current_state());
         match self.behaviour.current_state() {
             State::Startup => self.startup(),
             State::DisplayTime => self.display_time(),
             State::Configuration => self.configuration(),
             _ => self.error(),
         }
+        info!("{:?} action Done", self.behaviour.current_state());
     }
 
     pub fn get_current_state(&self) -> State {
@@ -69,15 +72,29 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
     }
 
     fn startup(&mut self) {
-        info!("Startup...");
         let _ = self.display.draw_progress(1);
 
-        self.configuration = self.configuration_manager.load_from_persistent_storage();
+        if self.configuration.is_invalid() {
+            info!("Load configuration");
+            self.configuration = self.configuration_manager.load_from_persistent_storage();
+        }
+
         if self.configuration.is_valid() {
-            debug!("Valid configuration");
+            info!("Valid configuration");
+
+            if let Err(error) = self.network.configure(&self.configuration.get_ssid().unwrap(), &self.configuration.get_password().unwrap()) {
+                error!("Failed to configure wifi: {}", error);
+                self.publish_event(Event::Error);
+            }
+            if let Err(error) = self.network.connect() {
+                error!("Failed to connect to network: {}", error);
+                self.publish_event(Event::Error);
+            }
+            if let Err(_) = self.time_source.synchronize() {
+                error!("Failed to synch time source");
+                self.publish_event(Event::Error);
+            }
             self.publish_event(Event::Start);
-            self.network.configure(&self.configuration.get_ssid().unwrap(), &self.configuration.get_password().unwrap());
-            let _ = self.network.connect();
         } else {
             warn!("No valid configuration in persistent storage");
             self.publish_event(Event::InvalidConfiguration);
@@ -85,7 +102,6 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
     }
 
     fn configuration(&mut self) {
-        info!("Configuration");
         let _ = self.display.draw_progress(2);
 
         if self.configuration.is_valid() {
@@ -108,7 +124,6 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
     }
 
     fn error(&mut self) {
-        info!("Startup action");
         let _ = self.display.draw_error();
     }
 }

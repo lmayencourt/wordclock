@@ -7,57 +7,30 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
-use anyhow::{anyhow,Result, Context};
-use log::*;
+use anyhow::{Result, Context};
 
 use esp_idf_svc::nvs::*;
 use esp_idf_sys::*;
 
+use application::configuration::*;
+
 const NVS_STRING_READ_BUFFER_SIZE: usize = 180;
 
-#[derive(Debug)]
-pub struct WifiConfiguration {
-    pub ssid: String,
-    pub password: String,
-}
+pub struct NonVolatileStorage;
 
-impl WifiConfiguration {
-    pub fn new(ssid: &str, password: &str) -> Self {
-        debug!("Create empty wifi config");
-        Self { ssid: String::from(ssid), password: String::from(password) }
-    }
-
-    pub fn do_exist() -> Result<bool> {
+impl PersistentStorage for NonVolatileStorage {
+    fn load_string(&mut self, key: &str) -> Result<String> {
         let memory_partition = EspCustomNvsPartition::take("nvs").context("Partition `nvs`doesn't exist")?;
         let nvs = EspCustomNvs::new(memory_partition.clone(), "wifi_config", false).context("Partition `nvs` doesn't have a `wifi_config` namespace")?;
 
-        if let Some(len) = nvs.length_str("ssid")? {
-            Ok(len != 0)
-        } else {
-            Err(anyhow!("Wifi config not found in nvs"))
-        }
+        Ok(get_string_from_nvs(&nvs, key)?)
     }
 
-    pub fn load() -> Result<Self> {
-        let memory_partition = EspCustomNvsPartition::take("nvs").context("Partition `nvs`doesn't exist")?;
-        let nvs = EspCustomNvs::new(memory_partition.clone(), "wifi_config", false).context("Partition `nvs` doesn't have a `wifi_config` namespace")?;
-
-        let mut nvs_str_buffer: [u8;100] = [0; 100];
-        nvs.get_str("dummy", &mut nvs_str_buffer)?;
-
-        Ok(Self{
-            ssid: get_string_from_nvs(&nvs, "ssid")?,
-            password: get_string_from_nvs(&nvs, "password")?,
-        })
-    }
-
-    pub fn store(&mut self) -> Result<()> {
+    fn store_string(&mut self, key: &str, value: &str) -> Result<()> {
         let memory_partition = EspCustomNvsPartition::take("nvs").context("Partition `nvs`doesn't exist")?;
         let mut nvs = EspCustomNvs::new(memory_partition.clone(), "wifi_config", true).context("Partition `nvs` doesn't have a `wifi_config` namespace")?;
 
-        nvs.set_str("ssid", &self.ssid)?;
-        nvs.set_str("password", &self.password)?;
-
+        nvs.set_str(key, value)?;
         Ok(())
     }
 }

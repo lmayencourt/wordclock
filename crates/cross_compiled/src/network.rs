@@ -2,6 +2,9 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
+use std::thread;
+use std::time::Duration;
+
 use anyhow::{anyhow, Result};
 use esp_idf_sys::EspError;
 use log::*;
@@ -16,6 +19,8 @@ use esp_idf_svc::nvs::*;
 use application::network::Network;
 
 pub struct WifiNetwork<'a> {
+    ssid: Option<String>,
+    password: Option<String>,
     wifi: EspWifi<'a>,
 }
 
@@ -37,7 +42,7 @@ impl<'a> WifiNetwork<'a> {
         let sys_loop_stack = EspSystemEventLoop::take()?;
         let nvs = EspDefaultNvsPartition::take().ok();
         let wifi = EspWifi::new(modem, sys_loop_stack, nvs)?;
-        Ok(Self { wifi })
+        Ok(Self { ssid:None, password:None, wifi })
     }
 
     pub fn setup_and_connect(&mut self, ssid: &str, password: &str) -> Result<()> {
@@ -66,8 +71,34 @@ impl<'a> WifiNetwork<'a> {
 }
 
 impl<'a> Network for WifiNetwork<'a> {
+    fn configure(&mut self, ssid: &str, password: &str) -> Result<()> {
+        self.ssid = Some(String::from(ssid));
+        self.password = Some(String::from(password));
+
+        self.wifi
+            .set_configuration(&wifi::Configuration::Client(wifi::ClientConfiguration {
+                ssid: ssid.into(),
+                password: password.into(),
+                // channel,
+                ..Default::default()
+            }))?;
+
+        self.wifi.start()?;
+
+        Ok(())
+    }
+
     fn connect(&mut self) -> Result<()> {
         self.wifi.connect()?;
+        thread::sleep(Duration::from_millis(10000));
+
+        while self.is_connected() == false {
+            info!("Waiting for network connection...");
+            self.disconnect()?;
+            thread::sleep(Duration::from_millis(500));
+            self.connect()?;
+            thread::sleep(Duration::from_millis(10000));
+        }
 
         Ok(())
     }

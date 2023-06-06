@@ -9,6 +9,7 @@ use anyhow::{anyhow, Result};
 use application::behaviour::*;
 use application::configuration::Configuration;
 use application::*;
+use application::time_source::TimeSourceError;
 
 #[derive(PartialEq, Debug)]
 enum FakeDisplayState {
@@ -51,7 +52,11 @@ impl MockTime {
 }
 
 impl time_source::TimeSource for MockTime {
-    fn get_time(&self) -> Result<time::Time> {
+    fn synchronize(&mut self) -> Result<(), TimeSourceError> {
+        Ok(())
+    }
+
+    fn get_time(&self) -> Result<time::Time, TimeSourceError> {
         Ok(self.curent)
     }
 }

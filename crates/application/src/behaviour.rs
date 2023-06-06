@@ -15,6 +15,7 @@ pub enum State {
 }
 
 /// Possible event that may trigger a state transition of the device.
+#[derive(Debug)]
 pub enum Event {
     Init,
     Start,

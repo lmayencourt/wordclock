@@ -8,7 +8,7 @@ use anyhow::Result;
 /// # Errors
 /// The functions will return an error if the hardware fails to carry the operation.
 pub trait Network {
-    fn configure(&mut self, ssid: &str, password: &str);
+    fn configure(&mut self, ssid: &str, password: &str) -> Result<()>;
     fn connect(&mut self) -> Result<()>;
     fn disconnect(&mut self) -> Result<()>;
     fn is_connected(&self) -> bool;
