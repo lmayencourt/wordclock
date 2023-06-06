@@ -94,6 +94,10 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
                 error!("Failed to synch time source");
                 self.publish_event(Event::Error);
             }
+            if let Err(error) = self.network.disconnect() {
+                error!("Failed to disconnect to network: {}", error);
+                self.publish_event(Event::Error);
+            }
             self.publish_event(Event::Start);
         } else {
             warn!("No valid configuration in persistent storage");
