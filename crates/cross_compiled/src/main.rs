@@ -75,6 +75,8 @@ fn main() -> Result<()> {
     //     thread::sleep(Duration::from_millis(2000));
     // }
 
+    let mut tick_counter:u32 = 0;
+
     loop {
         application.run();
         heart_beat.run();
@@ -83,9 +85,16 @@ fn main() -> Result<()> {
         if application.get_current_state() == State::DisplayTime {
             application.publish_event(Event::Tick);
 
-            info!("Network time epoch: {:?}", network_time::get_epoch_time());
-            info!("Parsed network time: {}", network_time::get_time());
-            info!("System time: {:?}", EspSystemTime {}.now());
+        if application.get_current_state() == State::DisplayTime {
+            if tick_counter >=10 {
+                tick_counter = 0;
+                application.publish_event(Event::Tick);
+                info!("Network time epoch: {:?}", network_time::get_epoch_time());
+                info!("Parsed network time: {}", network_time::get_time());
+                info!("System time: {:?}", EspSystemTime {}.now());
+            } else {
+                tick_counter += 1;
+            }
         }
 
         // Main loop iterate every 100ms
@@ -118,7 +127,7 @@ impl<'a> HearthBeat<'a> {
         if self.tick_counter >= 10 {
             self.tick_counter = 0;
         } else {
-            self.tick_counter = self.tick_counter + 1;
+            self.tick_counter += 1;
         }
     }
 }
