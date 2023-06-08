@@ -2,6 +2,7 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
+use std::collections::VecDeque;
 use log::*;
 
 use behaviour::*;
@@ -25,7 +26,7 @@ pub struct Application<D: Display, T: TimeSource, S: PersistentStorage, N: Netwo
     pub configuration_manager: ConfigurationManager<S>,
     pub network: N,
     behaviour: Behaviour,
-    event_queue: Vec<Event>,
+    event_queue: VecDeque<Event>,
 }
 
 impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D, T, S, N> {
@@ -38,17 +39,17 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
             configuration_manager: ConfigurationManager::new(persistent_storage),
             network,
             behaviour: Behaviour::new(),
-            event_queue: vec![],
+            event_queue: VecDeque::new(),
         }
     }
 
     pub fn publish_event(&mut self, event: Event) {
-        self.event_queue.push(event);
+        self.event_queue.push_back(event);
     }
 
     pub fn run(&mut self) {
         // loop {
-        if let Some(event) = self.event_queue.pop() {
+        if let Some(event) = self.event_queue.pop_front() {
             info!("Handling event {:?}", event);
             self.behaviour.handle_event(event);
             self.state_action();

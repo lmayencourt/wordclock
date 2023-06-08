@@ -2,6 +2,8 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
+use log::info;
+
 /// Possible state of the device
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum State {
@@ -44,6 +46,7 @@ impl Behaviour {
 
     /// React to a given event
     pub fn handle_event(&mut self, event: Event) {
+        let old_state = self.state;
         match (&self.state, event) {
             (State::Initial, Event::Init) => self.state = State::Startup,
             (State::Startup, Event::InvalidConfiguration) => self.state = State::Configuration,
@@ -57,6 +60,10 @@ impl Behaviour {
             (State::NightMode, Event::Day) => self.state = State::DisplayTime,
             (_, Event::Error) => self.state = State::Error,
             (_, _) => self.state = State::Error,
+        }
+
+        if old_state != self.state {
+            info!("{:?} -> {:?}", old_state, self.state);
         }
     }
 

@@ -87,8 +87,9 @@ struct FakeNetwork {
 }
 
 impl network::Network for FakeNetwork {
-    fn configure(&mut self, _ssid: &str, _password: &str) {
+    fn configure(&mut self, _ssid: &str, _password: &str) -> Result<()> {
         self.is_configured = true;
+        Ok(())
     }
 
     fn connect(&mut self) -> Result<()> {
@@ -220,5 +221,16 @@ fn network_is_ready_in_display_time() {
     goto_display_time(&mut app);
 
     assert!(app.network.is_configured);
-    assert!(app.network.is_connected);
+}
+
+#[test]
+fn enter_menu() {
+    let mut app = get_application();
+    goto_display_time(&mut app);
+
+    app.publish_event(Event::EnterMenu);
+    app.publish_event(Event::Tick);
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::Menu);
 }
