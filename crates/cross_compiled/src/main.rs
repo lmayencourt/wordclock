@@ -45,7 +45,8 @@ fn main() -> Result<()> {
     info!("WordClock firmware ({}) - ESP32!", Version::from_string("99.99.99")?);
 
     let peripherals = Peripherals::take().unwrap();
-    let mut led = PinDriver::output(peripherals.pins.gpio2)?;
+    let led = PinDriver::output(peripherals.pins.gpio2)?;
+    let mut heart_beat = HearthBeat::new(led);
 
     let led_driver = WS2812::new(114, peripherals.pins.gpio15, peripherals.rmt.channel0)?;
     let display = rgb_led_strip_matrix::RgbLedStripMatrix::new(led_driver)?;
@@ -76,12 +77,8 @@ fn main() -> Result<()> {
 
     loop {
         application.run();
+        heart_beat.run();
 
-        // hearth beat
-        led.set_high().unwrap();
-        thread::sleep(Duration::from_millis(100));
-        led.set_low().unwrap();
-        thread::sleep(Duration::from_millis(900));
 
         if application.get_current_state() == State::DisplayTime {
             application.publish_event(Event::Tick);
@@ -89,6 +86,39 @@ fn main() -> Result<()> {
             info!("Network time epoch: {:?}", network_time::get_epoch_time());
             info!("Parsed network time: {}", network_time::get_time());
             info!("System time: {:?}", EspSystemTime {}.now());
+        }
+
+        // Main loop iterate every 100ms
+        thread::sleep(Duration::from_millis(100));
+    }
+}
+
+/// Generate a regular visual signal of the system health
+///
+/// Blink the board LED every second, for 100ms. This implementation assumes to
+/// be called every 100ms.
+struct HearthBeat<'a> {
+    led: PinDriver<'a, Gpio2, Output>,
+    tick_counter:u32,
+}
+
+impl<'a> HearthBeat<'a> {
+    pub fn new(led:PinDriver<'a, Gpio2, Output>) -> Self {
+        Self { led, tick_counter:0 }
+    }
+
+    /// Must be called every 100ms
+    pub fn run(&mut self) {
+        match self.tick_counter {
+            0 => self.led.set_low().unwrap(),
+            9 => self.led.set_high().unwrap(),
+            _ => (),
+        }
+
+        if self.tick_counter >= 10 {
+            self.tick_counter = 0;
+        } else {
+            self.tick_counter = self.tick_counter + 1;
         }
     }
 }
