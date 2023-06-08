@@ -63,6 +63,11 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
             State::Startup => self.startup(),
             State::DisplayTime => self.display_time(),
             State::Configuration => self.configuration(),
+            State::MenuFota => (),
+            State::MenuCleanConfig => (),
+            State::MenuExit => (),
+            State::Fota => self.firmate_update(),
+            State::CleanConfig => self.clean_config(),
             _ => self.error(),
         }
         info!("{:?} action Done", self.behaviour.current_state());
@@ -126,6 +131,15 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
         info!("Displaying time: {}", time);
 
         let _ = self.display.draw_time(time);
+    }
+
+    fn firmate_update(&mut self) {
+
+    }
+
+    fn clean_config(&mut self) {
+        self.configuration = Configuration::default();
+        self.publish_event(Event::InvalidConfiguration);
     }
 
     fn error(&mut self) {

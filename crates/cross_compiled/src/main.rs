@@ -48,6 +48,8 @@ fn main() -> Result<()> {
     let led = PinDriver::output(peripherals.pins.gpio2)?;
     let mut heart_beat = HearthBeat::new(led);
 
+    let push_button = PinDriver::input(peripherals.pins.gpio0)?;
+
     let led_driver = WS2812::new(114, peripherals.pins.gpio15, peripherals.rmt.channel0)?;
     let display = rgb_led_strip_matrix::RgbLedStripMatrix::new(led_driver)?;
 
@@ -76,14 +78,27 @@ fn main() -> Result<()> {
     // }
 
     let mut tick_counter:u32 = 0;
+    let mut push_duration:u32;
 
     loop {
         application.run();
         heart_beat.run();
 
+        // Blocking "Enter" push-button detection
+        if push_button.is_low() {
+            push_duration = 0;
 
-        if application.get_current_state() == State::DisplayTime {
-            application.publish_event(Event::Tick);
+            while push_button.is_low() {
+                thread::sleep(Duration::from_millis(100));
+                push_duration += 100;
+            }
+
+            if push_duration < 2000 {
+                application.publish_event(Event::EnterShortPush);
+            } else {
+                application.publish_event(Event::EnterLongPush);
+            }
+        }
 
         if application.get_current_state() == State::DisplayTime {
             if tick_counter >=10 {

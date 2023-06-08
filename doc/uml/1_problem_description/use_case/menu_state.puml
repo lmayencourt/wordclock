@@ -1,0 +1,30 @@
+@startuml
+
+mainframe System menu state
+
+state Menu {
+    state Fota
+    state CleanConfig
+    state ExitMenu
+
+    state "Perform FOTA" as FotaAction
+    state "Clean config" as CleanConfigAction
+}
+
+DisplayTime --> Menu: Enter-Button short-push \nEnter-Button long-push
+
+State Menu {
+    Fota -> CleanConfig: Enter-Button short-push
+    Fota --> FotaAction: Enter-Button long-push
+    FotaAction --> [*]
+    CleanConfig -> ExitMenu: Enter-Button short-push
+    CleanConfig --> CleanConfigAction: Enter-Button long-push
+    CleanConfigAction --> [*]
+    ExitMenu -> Fota: Enter-Button short-push
+    ExitMenu -> [*]: Enter-Button long-push
+}
+
+Menu -up-> Startup: InvalidConfiguration \nFota done
+Menu -up-> DisplayTime: Menu exit
+
+@enduml

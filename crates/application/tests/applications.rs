@@ -150,6 +150,13 @@ fn goto_display_time(app: &mut Application<FakeDisplay, MockTime, FakePersistent
     assert_eq!(app.get_current_state(), State::DisplayTime);
 }
 
+fn goto_menu(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
+    goto_display_time(app);
+    app.publish_event(Event::EnterShortPush);
+    app.run();
+    assert_eq!(app.get_current_state(), State::MenuFota);
+}
+
 #[test]
 fn display_time() {
     let mut app = get_application();
@@ -224,13 +231,75 @@ fn network_is_ready_in_display_time() {
 }
 
 #[test]
-fn enter_menu() {
+fn enter_menu_with_short_push() {
     let mut app = get_application();
     goto_display_time(&mut app);
 
-    app.publish_event(Event::EnterMenu);
+    app.publish_event(Event::EnterShortPush);
     app.publish_event(Event::Tick);
     app.run();
 
-    assert_eq!(app.get_current_state(), State::Menu);
+    assert_eq!(app.get_current_state(), State::MenuFota);
+}
+
+#[test]
+fn enter_menu_with_long_push() {
+    let mut app = get_application();
+    goto_display_time(&mut app);
+
+    app.publish_event(Event::EnterLongPush);
+    app.publish_event(Event::Tick);
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::MenuFota);
+}
+
+#[test]
+fn short_push_goes_to_next_menu_item() {
+    let mut app = get_application();
+    goto_menu(&mut app);
+
+    app.publish_event(Event::EnterShortPush);
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::MenuCleanConfig);
+
+    app.publish_event(Event::EnterShortPush);
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::MenuExit);
+
+    app.publish_event(Event::EnterShortPush);
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::MenuFota);
+}
+
+#[test]
+fn long_push_enter_menu_item() {
+    let mut app = get_application();
+    goto_menu(&mut app);
+
+    app.publish_event(Event::EnterLongPush);
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::Fota);
+}
+
+#[test]
+fn menu_clean_configuration() {
+    let mut app = get_application();
+    goto_menu(&mut app);
+
+    app.publish_event(Event::EnterShortPush);
+    app.run();
+
+    app.publish_event(Event::EnterLongPush);
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::CleanConfig);
+    assert!(app.configuration.is_invalid());
+
+    app.run();
+    assert_eq!(app.get_current_state(), State::Startup);
 }
