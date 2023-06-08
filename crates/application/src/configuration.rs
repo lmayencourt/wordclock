@@ -2,16 +2,24 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
+use std::{fmt::Display, str::FromStr};
+
 use anyhow::{anyhow, Result};
+
+use crate::time::Time;
 
 /// Key entries used as index for persistent storage.
 const WIFI_SSID_KEY: &str = "wifi_ssid";
 const WIFI_PASSWORD_KEY: &str = "wifi_password";
+const NIGHT_START_KEY: &str = "night_start";
+const NIGHT_END_KEY: &str = "night_end";
 
 #[derive(Clone)]
 struct ConfigurationFields {
     ssid: String,
     password: String,
+    night_start: Option<Time>,
+    night_end: Option<Time>,
 }
 
 #[derive(Clone)]
@@ -28,9 +36,16 @@ pub struct Configuration {
 
 impl Configuration {
     /// Create a new valid configuration
-    pub fn new(ssid: String, password: String) -> Self {
+    pub fn new(ssid: String, password: String, night_start: Option<Time>, night_end: Option<Time>) -> Self {
         Self {
-            state: ConfigurationState::Valid(ConfigurationFields { ssid, password }),
+            state: ConfigurationState::Valid(
+                ConfigurationFields {
+                    ssid,
+                    password,
+                    night_start,
+                    night_end,
+                }
+            ),
         }
     }
 
@@ -58,6 +73,20 @@ impl Configuration {
     pub fn get_password(&self) -> Option<String> {
         match &self.state {
             ConfigurationState::Valid(fields) => Some(fields.password.clone()),
+            _ => None,
+        }
+    }
+
+    pub fn get_night_start(&self) -> Option<Time> {
+        match &self.state {
+            ConfigurationState::Valid(fields) => fields.night_start,
+            _ => None,
+        }
+    }
+
+    pub fn get_night_end(&self) -> Option<Time> {
+        match &self.state {
+            ConfigurationState::Valid(fields) => fields.night_end,
             _ => None,
         }
     }
@@ -121,8 +150,28 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
             }
         }
 
+        let mut night_start: Option<Time> = None;
+        match self.storage_backend.load_string(NIGHT_START_KEY) {
+            Ok(value) => night_start = Some(Time::from_str(&value).unwrap()),
+            _ => {
+                return Configuration {
+                    state: ConfigurationState::Invalid,
+                }
+            }
+        }
+
+        let mut night_end: Option<Time> = None;
+        match self.storage_backend.load_string(NIGHT_END_KEY) {
+            Ok(value) => night_end = Some(Time::from_str(&value).unwrap()),
+            _ => {
+                return Configuration {
+                    state: ConfigurationState::Invalid,
+                }
+            }
+        }
+
         Configuration {
-            state: ConfigurationState::Valid(ConfigurationFields { ssid, password }),
+            state: ConfigurationState::Valid(ConfigurationFields { ssid, password, night_start, night_end }),
         }
     }
 
@@ -137,6 +186,12 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
                 .store_string(WIFI_SSID_KEY, &configuration.get_ssid().unwrap())?;
             self.storage_backend
                 .store_string(WIFI_PASSWORD_KEY, &configuration.get_password().unwrap())?;
+            if let Some(night_start) = configuration.get_night_start() {
+                self.storage_backend.store_string(NIGHT_START_KEY, night_start.to_string().as_str())?;
+            }
+            if let Some(night_end) = configuration.get_night_end() {
+                self.storage_backend.store_string(NIGHT_END_KEY, night_end.to_string().as_str())?;
+            }
         } else {
             return Err(anyhow!("Can't store invalid configuration"));
         }

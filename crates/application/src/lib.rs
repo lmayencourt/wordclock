@@ -62,6 +62,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
         match self.behaviour.current_state() {
             State::Startup => self.startup(),
             State::DisplayTime => self.display_time(),
+            State::NightMode => self.night_mode(),
             State::Configuration => self.configuration(),
             State::MenuFota => (),
             State::MenuCleanConfig => (),
@@ -119,7 +120,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
         } else {
             // todo!("Start configuration server");
             warn!("Use hard-coded config!");
-            let hard_coded_config = Configuration::new(env!("RUST_ESP32_WIFI_SSID").to_string(), env!("RUST_ESP32_WIFI_PASSWORD").to_string() );
+            let hard_coded_config = Configuration::new(env!("RUST_ESP32_WIFI_SSID").to_string(), env!("RUST_ESP32_WIFI_PASSWORD").to_string(), None, None);
             self.configuration = hard_coded_config;
             // let _ = self.configuration_manager.store_to_persistent_storage(self.configuration.clone());
             self.publish_event(Event::ValidConfiguration);
@@ -131,6 +132,27 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
         info!("Displaying time: {}", time);
 
         let _ = self.display.draw_time(time);
+
+        if let Some(night_start) = self.configuration.get_night_start() {
+            if time.hour >= night_start.hour {
+                if time.minute >= night_start.minute {
+                    self.publish_event(Event::Night);
+                }
+            }
+        }
+    }
+
+    fn night_mode(&mut self) {
+        let time = self.time_source.get_time().unwrap();
+        info!("Currently in night {}", time);
+
+        if let Some(night_start) = self.configuration.get_night_start() {
+            if time.hour >= night_start.hour {
+                if time.minute >= night_start.minute {
+                    self.publish_event(Event::Day);
+                }
+            }
+        }
     }
 
     fn firmate_update(&mut self) {

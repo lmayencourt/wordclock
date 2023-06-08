@@ -10,6 +10,7 @@ use application::behaviour::*;
 use application::configuration::Configuration;
 use application::*;
 use application::time_source::TimeSourceError;
+use time::Time;
 
 #[derive(PartialEq, Debug)]
 enum FakeDisplayState {
@@ -137,7 +138,7 @@ fn run_startup(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorag
 }
 
 fn preset_configuration(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
-    let configuration = Configuration::new(String::from("home wifi"), String::from("secret"));
+    let configuration = Configuration::new(String::from("home wifi"), String::from("secret"), Some(Time::new(22, 0, 0).unwrap()), Some(Time::new(4,30,0).unwrap()));
     app.configuration_manager
         .store_to_persistent_storage(configuration)
         .unwrap();
@@ -302,4 +303,45 @@ fn menu_clean_configuration() {
 
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);
+}
+
+#[test]
+fn enter_night_mode() {
+    let mut app = get_application();
+    goto_display_time(&mut app);
+
+    app.time_source
+        .set_time(time::Time::new(22, 00, 00).unwrap());
+
+    app.publish_event(Event::Tick);
+    app.run();
+    // Need an extra run to process the "Night" event
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::NightMode);
+}
+
+#[test]
+fn exit_night_mode() {
+    let mut app = get_application();
+    goto_display_time(&mut app);
+
+    app.time_source
+        .set_time(time::Time::new(22, 00, 00).unwrap());
+
+    app.publish_event(Event::Tick);
+    app.run();
+    // Need an extra run to process the "Night" event
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::NightMode);
+    app.time_source
+        .set_time(time::Time::new(4, 30, 00).unwrap());
+
+    // app.publish_event(Event::Tick);
+    // app.run();
+    // Need an extra run to process the "Night" event
+    app.run();
+
+    assert_eq!(app.get_current_state(), State::DisplayTime);
 }
