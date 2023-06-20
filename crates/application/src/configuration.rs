@@ -2,9 +2,10 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
-use std::{fmt::Display, str::FromStr};
+use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
+use regex::Regex;
 
 use crate::time::Time;
 
@@ -14,7 +15,10 @@ const WIFI_PASSWORD_KEY: &str = "wifi_password";
 const NIGHT_START_KEY: &str = "night_start";
 const NIGHT_END_KEY: &str = "night_end";
 
-#[derive(Clone)]
+/// REGEX used to parse the http get query string containing the configuration
+const CONFIGURATION_QUERY_STRING_REGEX: &str = r"^\/get\?input_wifi_ssid=(?P<ssid>.*)&input_wifi_password=(?P<password>.*)&input_night_mode_start=(?P<night_start>[\%3A0-9]*)&input_night_mode_end=(?P<night_end>[\%3A0-9]*)";
+
+#[derive(Debug, Clone, PartialEq)]
 struct ConfigurationFields {
     ssid: String,
     password: String,
@@ -22,14 +26,14 @@ struct ConfigurationFields {
     night_end: Option<Time>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum ConfigurationState {
     Invalid,
     Valid(ConfigurationFields),
 }
 
 /// Device configuration data type, representing validity and configuration fields.
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Configuration {
     state: ConfigurationState,
 }
@@ -46,6 +50,39 @@ impl Configuration {
                     night_end,
                 }
             ),
+        }
+    }
+
+    pub fn from_uri_query_string(uri: &str) -> Result<Self> {
+        let re = Regex::new(CONFIGURATION_QUERY_STRING_REGEX)?;
+
+        let mut night_start: Option<Time> = None;
+        let mut night_end: Option<Time> = None;
+        if let Some(cap) = re.captures(uri) {
+            let utf8_encoded_value: String = cap[1].parse()?;
+            let ssid: String = url_escape::decode(&utf8_encoded_value).to_string();
+            let utf8_encoded_value: String = cap[2].parse()?;
+            let password: String = url_escape::decode(&utf8_encoded_value).to_string();
+            if let Some(value) = cap.name("night_start") {
+                if value.len() >= 5 {
+                    let mut time = String::from(url_escape::decode(value.as_str()));
+                    time.push_str(":00");
+                    night_start = Some(Time::from_str(&time)?);
+                }
+            }
+            if let Some(value) = cap.name("night_end") {
+                if value.len() >= 5 {
+                    let mut time = String::from(url_escape::decode(value.as_str()));
+                    time.push_str(":00");
+                    night_end = Some(Time::from_str(&time)?);
+                }
+            }
+
+            Ok(Configuration {
+                state: ConfigurationState::Valid(ConfigurationFields { ssid, password, night_start, night_end }),
+            })
+        } else {
+            Err(anyhow!("Failed to parse query string: {}", uri))
         }
     }
 
@@ -150,7 +187,7 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
             }
         }
 
-        let mut night_start: Option<Time> = None;
+        let night_start: Option<Time>;
         match self.storage_backend.load_string(NIGHT_START_KEY) {
             Ok(value) => night_start = Some(Time::from_str(&value).unwrap()),
             _ => {
@@ -160,7 +197,7 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
             }
         }
 
-        let mut night_end: Option<Time> = None;
+        let night_end: Option<Time>;
         match self.storage_backend.load_string(NIGHT_END_KEY) {
             Ok(value) => night_end = Some(Time::from_str(&value).unwrap()),
             _ => {
@@ -197,5 +234,56 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::assert_eq;
+    use super::*;
+
+    #[test]
+    fn from_uri_query_string() {
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=&input_night_mode_end=").unwrap();
+        assert_eq!(
+            Configuration {
+                state: ConfigurationState::Valid(ConfigurationFields {
+                    ssid:String::from("myhomenetwork"),
+                    password:String::from("1234"),
+                    night_start:None,
+                    night_end:None
+                }),
+            },
+            config);
+    }
+
+    #[test]
+    fn from_uri_query_string_with_night_mode() {
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=23%3A30&input_night_mode_end=04%3A40").unwrap();
+        assert_eq!(
+            Configuration {
+                state: ConfigurationState::Valid(ConfigurationFields {
+                    ssid:String::from("myhomenetwork"),
+                    password:String::from("1234"),
+                    night_start:Some(Time::new(23,30,0).unwrap()),
+                    night_end:Some(Time::new(4,40,0).unwrap()),
+                }),
+            },
+            config);
+    }
+
+    #[test]
+    fn from_uri_query_string_with_special_chars() {
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=Solnet-1234&input_wifi_password=Secret%40-7&input_night_mode_start=&input_night_mode_end=").unwrap();
+        assert_eq!(
+            Configuration {
+                state: ConfigurationState::Valid(ConfigurationFields {
+                    ssid:String::from("Solnet-1234"),
+                    password:String::from("Secret@-7"),
+                    night_start:None,
+                    night_end:None,
+                }),
+            },
+            config);
     }
 }

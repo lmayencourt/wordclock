@@ -4,6 +4,7 @@
 
 pub mod firmware_update;
 pub mod led_driver;
+pub mod http_server;
 pub mod network;
 pub mod network_time;
 pub mod persistent_settings;

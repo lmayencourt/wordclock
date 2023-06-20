@@ -76,6 +76,16 @@ impl<'a> WifiNetwork<'a> {
         Ok(())
     }
 
+    pub fn setup_access_point(&mut self, ssid: &str) -> Result<()> {
+        self.wifi.set_configuration(&wifi::Configuration::AccessPoint(wifi::AccessPointConfiguration {
+            ssid: ssid.into(),
+            ..Default::default()
+        }))?;
+
+        self.wifi.start()?;
+
+        Ok(())
+    }
 }
 
 impl<'a> Network for WifiNetwork<'a> {
@@ -126,5 +136,4 @@ impl<'a> Network for WifiNetwork<'a> {
             }
         }
     }
-
 }
