@@ -58,14 +58,19 @@ fn main() -> Result<()> {
 
     let mut network = network::WifiNetwork::new(peripherals.modem)?;
 
+    // Anomaly-001: WiFi driver need NVS to be initialized
+    //
     // Needed for now to avoid wifi error:
     // E (2691) phy_init: esp_phy_load_cal_data_from_nvs: NVS has not been initialized. Call nvs_flash_init before starting WiFi/BT.
     network.configure("dummy","1234")?;
     network.fake_connect()?;
 
-    // Need to start the WiFi in soft Access Point mode here.
+    // Anomaly-002: WiFi can't be configured in soft AP after access to NVS
+    //
     // Setting up the access point after reading the persistent settings in NVS
     // partition fails due to an invalid NVS handle in the WiFi driver.
+    // Start the WiFi soft AP here to provide an already configured network to the application.
+    // The application code can switch to Station mode afterward without issue.
     network.setup_access_point(ACCESS_POINT_NAME)?;
     let http = http_server::HttpServer::new()?;
 

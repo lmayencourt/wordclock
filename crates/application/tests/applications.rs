@@ -154,7 +154,7 @@ fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage
     let network = FakeNetwork {
         is_configured: false,
         is_connected: false,
-        is_access_point: true,
+        is_access_point: true, // to reflect Anomaly-002
     };
     let configuration_server = FakeConfigServer {
         is_config_received: false,
