@@ -124,7 +124,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
         if self.configuration.is_valid() {
             self.publish_event(Event::ValidConfiguration);
         } else {
-            // Network is already configured as access point by main.rs
+            // Network is already configured as access point by main.rs, see Anomaly-002
 
             loop {
                 thread::sleep(Duration::from_millis(200));
@@ -144,9 +144,6 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
                 }
             }
 
-            // warn!("Use hard-coded config!");
-            // let hard_coded_config = Configuration::new(env!("RUST_ESP32_WIFI_SSID").to_string(), env!("RUST_ESP32_WIFI_PASSWORD").to_string(), None, None);
-            // self.configuration = hard_coded_config;
             let _ = self.configuration_manager.store_to_persistent_storage(self.configuration.clone());
 
             self.publish_event(Event::ValidConfiguration);

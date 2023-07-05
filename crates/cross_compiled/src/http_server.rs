@@ -85,14 +85,14 @@ fn get_handler(mut req: Request<&mut EspHttpConnection>) -> embedded_svc::http::
 fn config_form(content: impl AsRef<str>) -> String {
     format!(
         r#"
-!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
     <head>
     <title>Word-Clock</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
-    <h1>{}/h1>
+    <h1>{}</h1>
     <form action="/get" target="hidden-form">
         Wifi SSID (name): <input type="text" name="input_wifi_ssid"><br><br>
         Wifi password: <input type="text" name="input_wifi_password"><br><br>

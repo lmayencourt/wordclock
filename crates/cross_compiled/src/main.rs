@@ -37,7 +37,7 @@ use cross_compiled::network_time;
 use cross_compiled::persistent_settings::NonVolatileStorage;
 use cross_compiled::rgb_led_strip_matrix;
 
-const ACCESS_POINT_NAME: &str = "WordClock Conf";
+const ACCESS_POINT_NAME: &str = "WordClock Configuration";
 
 fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
