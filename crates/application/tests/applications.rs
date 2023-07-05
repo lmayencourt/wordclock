@@ -9,6 +9,7 @@ use anyhow::{anyhow, Result};
 use application::behaviour::*;
 use application::configuration::Configuration;
 use application::*;
+use application::configuration_server::ConfigurationServer;
 use application::time_source::TimeSourceError;
 use time::Time;
 
@@ -85,6 +86,7 @@ impl configuration::PersistentStorage for FakePersistentStorage {
 struct FakeNetwork {
     is_configured: bool,
     is_connected: bool,
+    is_access_point: bool,
 }
 
 impl network::Network for FakeNetwork {
@@ -98,6 +100,7 @@ impl network::Network for FakeNetwork {
             return Err(anyhow!("Network not configured properly"));
         }
 
+        self.is_access_point = false;
         self.is_connected = true;
         Ok(())
     }
@@ -110,9 +113,35 @@ impl network::Network for FakeNetwork {
     fn is_connected(&self) -> bool {
         self.is_connected
     }
+
+    fn setup_access_point(&mut self, ssid: &str) -> Result<()> {
+        self.is_connected = false;
+        self.is_access_point = true;
+        Ok(())
+    }
 }
 
-fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork> {
+struct FakeConfigServer {
+    is_config_received: bool,
+}
+
+impl FakeConfigServer {
+    fn set_receive_config(&mut self) {
+        self.is_config_received = true;
+    }
+}
+
+impl ConfigurationServer for FakeConfigServer {
+    fn is_configuration_received(&self) -> bool {
+        self.is_config_received
+    }
+
+    fn get_config_uri(&self) -> Option<String> {
+        Some(String::from("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=23%3A30&input_night_mode_end=04%3A40"))
+    }
+}
+
+fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer> {
     let display = FakeDisplay {
         state: FakeDisplayState::Clean,
     };
@@ -125,33 +154,37 @@ fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage
     let network = FakeNetwork {
         is_configured: false,
         is_connected: false,
+        is_access_point: true,
+    };
+    let configuration_server = FakeConfigServer {
+        is_config_received: false,
     };
 
-    Application::new(display, time_source, persistent_storage, network)
+    Application::new(display, time_source, persistent_storage, network, configuration_server)
 }
 
-fn run_startup(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
+fn run_startup(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer>) {
     assert_eq!(app.get_current_state(), State::Initial);
     app.publish_event(Event::Init);
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);
 }
 
-fn preset_configuration(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
+fn preset_configuration(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer>) {
     let configuration = Configuration::new(String::from("home wifi"), String::from("secret"), Some(Time::new(22, 0, 0).unwrap()), Some(Time::new(4,30,0).unwrap()));
     app.configuration_manager
         .store_to_persistent_storage(configuration)
         .unwrap();
 }
 
-fn goto_display_time(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
+fn goto_display_time(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer>) {
     preset_configuration(app);
     run_startup(app);
     app.run();
     assert_eq!(app.get_current_state(), State::DisplayTime);
 }
 
-fn goto_menu(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork>) {
+fn goto_menu(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer>) {
     goto_display_time(app);
     app.publish_event(Event::EnterShortPush);
     app.run();
@@ -183,11 +216,13 @@ fn display_time() {
 fn invalid_config_start_configuration() {
     let mut app = get_application();
     assert!(app.configuration.is_invalid());
+    app.configuration_server.set_receive_config();
 
     run_startup(&mut app);
 
     app.run();
     assert_eq!(app.get_current_state(), State::Configuration);
+    assert!(app.network.is_access_point);
 }
 
 #[test]
@@ -210,9 +245,9 @@ fn valid_config_from_configuration_start_displaying_time() {
 
     run_startup(&mut app);
 
+    app.configuration_server.set_receive_config();
     app.run();
     assert_eq!(app.get_current_state(), State::Configuration);
-    preset_configuration(&mut app);
 
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);

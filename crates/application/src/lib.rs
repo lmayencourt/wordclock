@@ -4,33 +4,38 @@
 
 use std::collections::VecDeque;
 use log::*;
+use std::time::Duration;
+use std::thread;
 
 use behaviour::*;
 use configuration::{Configuration, ConfigurationManager, PersistentStorage};
+use configuration_server::ConfigurationServer;
 use display::Display;
 use network::Network;
 use time_source::TimeSource;
 
 pub mod behaviour;
 pub mod configuration;
+pub mod configuration_server;
 pub mod display;
 pub mod network;
 pub mod time;
 pub mod time_source;
 pub mod version;
 
-pub struct Application<D: Display, T: TimeSource, S: PersistentStorage, N: Network> {
+pub struct Application<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer> {
     pub display: D,
     pub time_source: T,
     pub configuration: Configuration,
     pub configuration_manager: ConfigurationManager<S>,
     pub network: N,
+    pub configuration_server: C,
     behaviour: Behaviour,
     event_queue: VecDeque<Event>,
 }
 
-impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D, T, S, N> {
-    pub fn new(mut display: D, time_source: T, persistent_storage: S, network: N) -> Self {
+impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer> Application<D, T, S, N, C> {
+    pub fn new(mut display: D, time_source: T, persistent_storage: S, network: N, configuration_server: C) -> Self {
         display.clear().unwrap();
         Application {
             display,
@@ -38,6 +43,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
             configuration: Configuration::default(),
             configuration_manager: ConfigurationManager::new(persistent_storage),
             network,
+            configuration_server,
             behaviour: Behaviour::new(),
             event_queue: VecDeque::new(),
         }
@@ -118,11 +124,31 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network> Application<D,
         if self.configuration.is_valid() {
             self.publish_event(Event::ValidConfiguration);
         } else {
-            // todo!("Start configuration server");
-            warn!("Use hard-coded config!");
-            let hard_coded_config = Configuration::new(env!("RUST_ESP32_WIFI_SSID").to_string(), env!("RUST_ESP32_WIFI_PASSWORD").to_string(), None, None);
-            self.configuration = hard_coded_config;
-            // let _ = self.configuration_manager.store_to_persistent_storage(self.configuration.clone());
+            // Network is already configured as access point by main.rs
+
+            loop {
+                thread::sleep(Duration::from_millis(200));
+                if self.configuration_server.is_configuration_received() {
+                    break;
+                }
+            }
+
+            let config_uri = self.configuration_server.get_config_uri();
+            if let Some(uri) = config_uri {
+                match Configuration::from_uri_query_string(&uri) {
+                    Ok(config) => {
+                        info!("New config is {:?}", config);
+                        self.configuration = config;
+                    },
+                    Err(e) => error!("failed to parse config uri: {}", e),
+                }
+            }
+
+            // warn!("Use hard-coded config!");
+            // let hard_coded_config = Configuration::new(env!("RUST_ESP32_WIFI_SSID").to_string(), env!("RUST_ESP32_WIFI_PASSWORD").to_string(), None, None);
+            // self.configuration = hard_coded_config;
+            let _ = self.configuration_manager.store_to_persistent_storage(self.configuration.clone());
+
             self.publish_event(Event::ValidConfiguration);
         }
     }

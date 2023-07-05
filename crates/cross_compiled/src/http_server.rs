@@ -10,6 +10,8 @@ use esp_idf_svc::http::server::{Configuration, EspHttpServer};
 use esp_idf_svc::http::server::EspHttpConnection;
 use embedded_svc::{http::server::Request, io::Write, utils::http::Headers};
 
+use application::configuration_server::ConfigurationServer;
+
 pub struct ServerGlobalData {
     pub configuration_received: bool,
     pub uri: Option<String>,
@@ -29,7 +31,7 @@ static GLOBAL_CONFIG_SERVER_STATE: Mutex<ServerGlobalData> = Mutex::new(ServerGl
 /// Provide a single home page, containing the WordClock configuration form.
 /// Handle the "/get" request when the "submit" button is pressed by the user.
 pub struct HttpServer {
-    server: EspHttpServer,
+    _server: EspHttpServer,
 }
 
 impl HttpServer {
@@ -42,15 +44,7 @@ impl HttpServer {
 
         server.fn_handler("/get", embedded_svc::http::Method::Get, move |req| {get_handler(req)})?;
 
-        Ok(Self{server})
-    }
-
-    pub fn get_config_uri(&self) -> Option<String> {
-        GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().uri.clone()
-    }
-
-    pub fn is_configuration_received(&self) -> bool {
-        GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().configuration_received
+        Ok(Self{_server: server})
     }
 }
 
@@ -120,4 +114,14 @@ fn config_form(content: impl AsRef<str>) -> String {
 "#,
         content.as_ref()
     )
+}
+
+impl ConfigurationServer for HttpServer {
+    fn is_configuration_received(&self) -> bool {
+        GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().configuration_received
+    }
+
+    fn get_config_uri(&self) -> Option<String> {
+        GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().uri.clone()
+    }
 }

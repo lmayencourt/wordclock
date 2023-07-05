@@ -31,10 +31,13 @@ use application::version::Version;
 
 // use cross_compiled::firmware_update;
 use cross_compiled::led_driver::WS2812;
+use cross_compiled::http_server;
 use cross_compiled::network;
 use cross_compiled::network_time;
 use cross_compiled::persistent_settings::NonVolatileStorage;
 use cross_compiled::rgb_led_strip_matrix;
+
+const ACCESS_POINT_NAME: &str = "WordClock Conf";
 
 fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
@@ -60,11 +63,16 @@ fn main() -> Result<()> {
     network.configure("dummy","1234")?;
     network.fake_connect()?;
 
+    // Need to start the WiFi in soft Access Point mode here.
+    // Setting up the access point after reading the persistent settings in NVS
+    // partition fails due to an invalid NVS handle in the WiFi driver.
+    network.setup_access_point(ACCESS_POINT_NAME)?;
+    let http = http_server::HttpServer::new()?;
+
     let time_source = network_time::NetworkTime::new();
 
     let persistent_storage = NonVolatileStorage;
-
-    let mut application = Application::new(display, time_source, persistent_storage, network);
+    let mut application = Application::new(display, time_source, persistent_storage, network, http);
 
     application.publish_event(Event::Init);
     application.run();

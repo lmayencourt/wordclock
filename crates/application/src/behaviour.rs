@@ -55,6 +55,7 @@ impl Behaviour {
             (State::Startup, Event::InvalidConfiguration) => self.state = State::Configuration,
             (State::Startup, Event::Start) => self.state = State::DisplayTime,
             (State::Configuration, Event::ValidConfiguration) => self.state = State::Startup,
+            (State::Configuration, Event::Tick) => (),
             (State::DisplayTime, Event::Tick) => (),
             (State::DisplayTime, Event::EnterShortPush) => self.state = State::MenuFota,
             (State::DisplayTime, Event::EnterLongPush) => self.state = State::MenuFota,

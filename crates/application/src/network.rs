@@ -12,4 +12,5 @@ pub trait Network {
     fn connect(&mut self) -> Result<()>;
     fn disconnect(&mut self) -> Result<()>;
     fn is_connected(&self) -> bool;
+    fn setup_access_point(&mut self, ssid: &str) -> Result<()>;
 }
