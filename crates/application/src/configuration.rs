@@ -7,7 +7,7 @@ use std::str::FromStr;
 use anyhow::{anyhow, Result};
 use regex::Regex;
 
-use crate::time::Time;
+use crate::time::{Time, TIME_STRING_LENGTH};
 
 /// Key entries used as index for persistent storage.
 const WIFI_SSID_KEY: &str = "wifi_ssid";
@@ -189,7 +189,13 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
 
         let night_start: Option<Time>;
         match self.storage_backend.load_string(NIGHT_START_KEY) {
-            Ok(value) => night_start = Some(Time::from_str(&value).unwrap()),
+            Ok(value) => {
+                if value.len() == TIME_STRING_LENGTH {
+                    night_start = Some(Time::from_str(&value).unwrap());
+                } else {
+                    night_start = None;
+                }
+            },
             _ => {
                 return Configuration {
                     state: ConfigurationState::Invalid,
@@ -199,7 +205,13 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
 
         let night_end: Option<Time>;
         match self.storage_backend.load_string(NIGHT_END_KEY) {
-            Ok(value) => night_end = Some(Time::from_str(&value).unwrap()),
+            Ok(value) => {
+                if value.len() == TIME_STRING_LENGTH {
+                    night_end = Some(Time::from_str(&value).unwrap());
+                } else {
+                    night_end = None;
+                }
+            },
             _ => {
                 return Configuration {
                     state: ConfigurationState::Invalid,

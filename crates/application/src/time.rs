@@ -5,6 +5,9 @@
 use anyhow::{anyhow, Result};
 use std::{fmt, str::FromStr};
 
+/// Size of a valid string representing a time in hh:mm:ss format
+pub const TIME_STRING_LENGTH: usize = 8;
+
 /// Time in 24 hour clock representation
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Time {
