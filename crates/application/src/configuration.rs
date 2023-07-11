@@ -40,16 +40,19 @@ pub struct Configuration {
 
 impl Configuration {
     /// Create a new valid configuration
-    pub fn new(ssid: String, password: String, night_start: Option<Time>, night_end: Option<Time>) -> Self {
+    pub fn new(
+        ssid: String,
+        password: String,
+        night_start: Option<Time>,
+        night_end: Option<Time>,
+    ) -> Self {
         Self {
-            state: ConfigurationState::Valid(
-                ConfigurationFields {
-                    ssid,
-                    password,
-                    night_start,
-                    night_end,
-                }
-            ),
+            state: ConfigurationState::Valid(ConfigurationFields {
+                ssid,
+                password,
+                night_start,
+                night_end,
+            }),
         }
     }
 
@@ -79,7 +82,12 @@ impl Configuration {
             }
 
             Ok(Configuration {
-                state: ConfigurationState::Valid(ConfigurationFields { ssid, password, night_start, night_end }),
+                state: ConfigurationState::Valid(ConfigurationFields {
+                    ssid,
+                    password,
+                    night_start,
+                    night_end,
+                }),
             })
         } else {
             Err(anyhow!("Failed to parse query string: {}", uri))
@@ -195,7 +203,7 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
                 } else {
                     night_start = None;
                 }
-            },
+            }
             _ => {
                 return Configuration {
                     state: ConfigurationState::Invalid,
@@ -211,7 +219,7 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
                 } else {
                     night_end = None;
                 }
-            },
+            }
             _ => {
                 return Configuration {
                     state: ConfigurationState::Invalid,
@@ -220,7 +228,12 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
         }
 
         Configuration {
-            state: ConfigurationState::Valid(ConfigurationFields { ssid, password, night_start, night_end }),
+            state: ConfigurationState::Valid(ConfigurationFields {
+                ssid,
+                password,
+                night_start,
+                night_end,
+            }),
         }
     }
 
@@ -236,10 +249,12 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
             self.storage_backend
                 .store_string(WIFI_PASSWORD_KEY, &configuration.get_password().unwrap())?;
             if let Some(night_start) = configuration.get_night_start() {
-                self.storage_backend.store_string(NIGHT_START_KEY, night_start.to_string().as_str())?;
+                self.storage_backend
+                    .store_string(NIGHT_START_KEY, night_start.to_string().as_str())?;
             }
             if let Some(night_end) = configuration.get_night_end() {
-                self.storage_backend.store_string(NIGHT_END_KEY, night_end.to_string().as_str())?;
+                self.storage_backend
+                    .store_string(NIGHT_END_KEY, night_end.to_string().as_str())?;
             }
         } else {
             return Err(anyhow!("Can't store invalid configuration"));
@@ -251,8 +266,8 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
 
 #[cfg(test)]
 mod tests {
-    use std::assert_eq;
     use super::*;
+    use std::assert_eq;
 
     #[test]
     fn from_uri_query_string() {
@@ -260,13 +275,14 @@ mod tests {
         assert_eq!(
             Configuration {
                 state: ConfigurationState::Valid(ConfigurationFields {
-                    ssid:String::from("myhomenetwork"),
-                    password:String::from("1234"),
-                    night_start:None,
-                    night_end:None
+                    ssid: String::from("myhomenetwork"),
+                    password: String::from("1234"),
+                    night_start: None,
+                    night_end: None
                 }),
             },
-            config);
+            config
+        );
     }
 
     #[test]
@@ -275,13 +291,14 @@ mod tests {
         assert_eq!(
             Configuration {
                 state: ConfigurationState::Valid(ConfigurationFields {
-                    ssid:String::from("myhomenetwork"),
-                    password:String::from("1234"),
-                    night_start:Some(Time::new(23,30,0).unwrap()),
-                    night_end:Some(Time::new(4,40,0).unwrap()),
+                    ssid: String::from("myhomenetwork"),
+                    password: String::from("1234"),
+                    night_start: Some(Time::new(23, 30, 0).unwrap()),
+                    night_end: Some(Time::new(4, 40, 0).unwrap()),
                 }),
             },
-            config);
+            config
+        );
     }
 
     #[test]
@@ -290,12 +307,13 @@ mod tests {
         assert_eq!(
             Configuration {
                 state: ConfigurationState::Valid(ConfigurationFields {
-                    ssid:String::from("Solnet-1234"),
-                    password:String::from("Secret@-7"),
-                    night_start:None,
-                    night_end:None,
+                    ssid: String::from("Solnet-1234"),
+                    password: String::from("Secret@-7"),
+                    night_start: None,
+                    night_end: None,
                 }),
             },
-            config);
+            config
+        );
     }
 }

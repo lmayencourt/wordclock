@@ -35,7 +35,11 @@ impl Time {
 
 impl fmt::Display for Time {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:0>2}:{:0>2}:{:0>2}", self.hour, self.minute, self.second)
+        write!(
+            f,
+            "{:0>2}:{:0>2}:{:0>2}",
+            self.hour, self.minute, self.second
+        )
     }
 }
 
@@ -73,8 +77,17 @@ mod tests {
 
     #[test]
     fn string_to_time() {
-        assert_eq!(Time::new(0, 0, 0).unwrap(), Time::from_str("00:00:00").unwrap());
-        assert_eq!(Time::new(12, 3, 4).unwrap(), Time::from_str("12:03:04").unwrap());
-        assert_eq!(Time::new(23, 59, 59).unwrap(), Time::from_str("23:59:59").unwrap());
+        assert_eq!(
+            Time::new(0, 0, 0).unwrap(),
+            Time::from_str("00:00:00").unwrap()
+        );
+        assert_eq!(
+            Time::new(12, 3, 4).unwrap(),
+            Time::from_str("12:03:04").unwrap()
+        );
+        assert_eq!(
+            Time::new(23, 59, 59).unwrap(),
+            Time::from_str("23:59:59").unwrap()
+        );
     }
 }

@@ -8,9 +8,9 @@ use anyhow::{anyhow, Result};
 
 use application::behaviour::*;
 use application::configuration::Configuration;
-use application::*;
 use application::configuration_server::ConfigurationServer;
 use application::time_source::TimeSourceError;
+use application::*;
 use time::Time;
 
 #[derive(PartialEq, Debug)]
@@ -141,7 +141,8 @@ impl ConfigurationServer for FakeConfigServer {
     }
 }
 
-fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer> {
+fn get_application(
+) -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer> {
     let display = FakeDisplay {
         state: FakeDisplayState::Clean,
     };
@@ -160,31 +161,74 @@ fn get_application() -> Application<FakeDisplay, MockTime, FakePersistentStorage
         is_config_received: false,
     };
 
-    Application::new(display, time_source, persistent_storage, network, configuration_server)
+    Application::new(
+        display,
+        time_source,
+        persistent_storage,
+        network,
+        configuration_server,
+    )
 }
 
-fn run_startup(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer>) {
+fn run_startup(
+    app: &mut Application<
+        FakeDisplay,
+        MockTime,
+        FakePersistentStorage,
+        FakeNetwork,
+        FakeConfigServer,
+    >,
+) {
     assert_eq!(app.get_current_state(), State::Initial);
     app.publish_event(Event::Init);
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);
 }
 
-fn preset_configuration(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer>) {
-    let configuration = Configuration::new(String::from("home wifi"), String::from("secret"), Some(Time::new(22, 0, 0).unwrap()), Some(Time::new(4,30,0).unwrap()));
+fn preset_configuration(
+    app: &mut Application<
+        FakeDisplay,
+        MockTime,
+        FakePersistentStorage,
+        FakeNetwork,
+        FakeConfigServer,
+    >,
+) {
+    let configuration = Configuration::new(
+        String::from("home wifi"),
+        String::from("secret"),
+        Some(Time::new(22, 0, 0).unwrap()),
+        Some(Time::new(4, 30, 0).unwrap()),
+    );
     app.configuration_manager
         .store_to_persistent_storage(configuration)
         .unwrap();
 }
 
-fn goto_display_time(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer>) {
+fn goto_display_time(
+    app: &mut Application<
+        FakeDisplay,
+        MockTime,
+        FakePersistentStorage,
+        FakeNetwork,
+        FakeConfigServer,
+    >,
+) {
     preset_configuration(app);
     run_startup(app);
     app.run();
     assert_eq!(app.get_current_state(), State::DisplayTime);
 }
 
-fn goto_menu(app: &mut Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer>) {
+fn goto_menu(
+    app: &mut Application<
+        FakeDisplay,
+        MockTime,
+        FakePersistentStorage,
+        FakeNetwork,
+        FakeConfigServer,
+    >,
+) {
     goto_display_time(app);
     app.publish_event(Event::EnterShortPush);
     app.run();

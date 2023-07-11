@@ -2,10 +2,10 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
-use std::collections::VecDeque;
 use log::*;
-use std::time::Duration;
+use std::collections::VecDeque;
 use std::thread;
+use std::time::Duration;
 
 use behaviour::*;
 use configuration::{Configuration, ConfigurationManager, PersistentStorage};
@@ -23,7 +23,13 @@ pub mod time;
 pub mod time_source;
 pub mod version;
 
-pub struct Application<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer> {
+pub struct Application<
+    D: Display,
+    T: TimeSource,
+    S: PersistentStorage,
+    N: Network,
+    C: ConfigurationServer,
+> {
     pub display: D,
     pub time_source: T,
     pub configuration: Configuration,
@@ -34,8 +40,16 @@ pub struct Application<D: Display, T: TimeSource, S: PersistentStorage, N: Netwo
     event_queue: VecDeque<Event>,
 }
 
-impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer> Application<D, T, S, N, C> {
-    pub fn new(mut display: D, time_source: T, persistent_storage: S, network: N, configuration_server: C) -> Self {
+impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer>
+    Application<D, T, S, N, C>
+{
+    pub fn new(
+        mut display: D,
+        time_source: T,
+        persistent_storage: S,
+        network: N,
+        configuration_server: C,
+    ) -> Self {
         display.clear().unwrap();
         Application {
             display,
@@ -95,7 +109,10 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
         if self.configuration.is_valid() {
             info!("Valid configuration");
 
-            if let Err(error) = self.network.configure(&self.configuration.get_ssid().unwrap(), &self.configuration.get_password().unwrap()) {
+            if let Err(error) = self.network.configure(
+                &self.configuration.get_ssid().unwrap(),
+                &self.configuration.get_password().unwrap(),
+            ) {
                 error!("Failed to configure wifi: {}", error);
                 self.publish_event(Event::Error);
             }
@@ -139,12 +156,14 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
                     Ok(config) => {
                         info!("New config is {:?}", config);
                         self.configuration = config;
-                    },
+                    }
                     Err(e) => error!("failed to parse config uri: {}", e),
                 }
             }
 
-            let _ = self.configuration_manager.store_to_persistent_storage(self.configuration.clone());
+            let _ = self
+                .configuration_manager
+                .store_to_persistent_storage(self.configuration.clone());
 
             self.publish_event(Event::ValidConfiguration);
         }
@@ -178,9 +197,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
         }
     }
 
-    fn firmate_update(&mut self) {
-
-    }
+    fn firmate_update(&mut self) {}
 
     fn clean_config(&mut self) {
         self.configuration = Configuration::default();
