@@ -27,3 +27,11 @@ I decided to keep the same layout as the *WordClock* hardware v1.0 (S like routi
 and neglected a "straight" layout,
 to achieve a unified design across hardware iteration, limiting the number of variant,
 accepting a slightly more complex LEDs matrix driver (half of the LEDs strips are inverted).
+
+## FW 1: Configuration validity flag
+In the context of implementing the persistent storage for the *WordClock* configuration,
+facing the need to store a boolean value in persistent memory,
+I decided to use a String value "0" and "1",
+and neglected a dedicated boolean storage API,
+to achieve a simple implementation, using the already implemented String storage API,
+accepting a possible higher memory footprint of the boolean value in memory.
