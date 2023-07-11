@@ -2,6 +2,7 @@
  * Copyright (c) 2023 Louis Mayencourt
  */
 
+pub mod esp32_soc;
 pub mod firmware_update;
 pub mod led_driver;
 pub mod http_server;

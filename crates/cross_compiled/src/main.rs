@@ -30,6 +30,7 @@ use application::network::Network;
 use application::version::Version;
 
 // use cross_compiled::firmware_update;
+use cross_compiled::esp32_soc::Esp32Soc;
 use cross_compiled::led_driver::WS2812;
 use cross_compiled::http_server;
 use cross_compiled::network;
@@ -77,7 +78,8 @@ fn main() -> Result<()> {
     let time_source = network_time::NetworkTime::new();
 
     let persistent_storage = NonVolatileStorage;
-    let mut application = Application::new(display, time_source, persistent_storage, network, http);
+    let power_manager = Esp32Soc;
+    let mut application = Application::new(display, time_source, persistent_storage, network, http, power_manager);
 
     application.publish_event(Event::Init);
     application.run();

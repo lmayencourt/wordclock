@@ -9,6 +9,7 @@ use anyhow::{anyhow, Result};
 use application::behaviour::*;
 use application::configuration::Configuration;
 use application::configuration_server::ConfigurationServer;
+use application::power_manager::PowerManager;
 use application::time_source::TimeSourceError;
 use application::*;
 use time::Time;
@@ -146,8 +147,15 @@ impl ConfigurationServer for FakeConfigServer {
     }
 }
 
+struct FakePowerManager;
+
+impl PowerManager for FakePowerManager {
+    fn reset(&self) {
+    }
+}
+
 fn get_application(
-) -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer> {
+) -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer, FakePowerManager> {
     let display = FakeDisplay {
         state: FakeDisplayState::Clean,
     };
@@ -165,6 +173,7 @@ fn get_application(
     let configuration_server = FakeConfigServer {
         is_config_received: false,
     };
+    let power_manager = FakePowerManager;
 
     Application::new(
         display,
@@ -172,6 +181,7 @@ fn get_application(
         persistent_storage,
         network,
         configuration_server,
+        power_manager,
     )
 }
 
@@ -182,6 +192,7 @@ fn run_startup(
         FakePersistentStorage,
         FakeNetwork,
         FakeConfigServer,
+        FakePowerManager,
     >,
 ) {
     assert_eq!(app.get_current_state(), State::Initial);
@@ -197,6 +208,7 @@ fn preset_configuration(
         FakePersistentStorage,
         FakeNetwork,
         FakeConfigServer,
+        FakePowerManager,
     >,
 ) {
     let configuration = Configuration::new(
@@ -217,6 +229,7 @@ fn goto_display_time(
         FakePersistentStorage,
         FakeNetwork,
         FakeConfigServer,
+        FakePowerManager,
     >,
 ) {
     preset_configuration(app);
@@ -232,6 +245,7 @@ fn goto_menu(
         FakePersistentStorage,
         FakeNetwork,
         FakeConfigServer,
+        FakePowerManager,
     >,
 ) {
     goto_display_time(app);

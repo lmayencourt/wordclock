@@ -12,6 +12,7 @@ use configuration::{Configuration, ConfigurationManager, PersistentStorage};
 use configuration_server::ConfigurationServer;
 use display::Display;
 use network::Network;
+use power_manager::PowerManager;
 use time_source::TimeSource;
 
 pub mod behaviour;
@@ -19,6 +20,7 @@ pub mod configuration;
 pub mod configuration_server;
 pub mod display;
 pub mod network;
+pub mod power_manager;
 pub mod time;
 pub mod time_source;
 pub mod version;
@@ -29,6 +31,7 @@ pub struct Application<
     S: PersistentStorage,
     N: Network,
     C: ConfigurationServer,
+    P: PowerManager,
 > {
     pub display: D,
     pub time_source: T,
@@ -36,12 +39,13 @@ pub struct Application<
     pub configuration_manager: ConfigurationManager<S>,
     pub network: N,
     pub configuration_server: C,
+    pub power_manager: P,
     behaviour: Behaviour,
     event_queue: VecDeque<Event>,
 }
 
-impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer>
-    Application<D, T, S, N, C>
+impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer, P: PowerManager>
+    Application<D, T, S, N, C, P>
 {
     pub fn new(
         mut display: D,
@@ -49,6 +53,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
         persistent_storage: S,
         network: N,
         configuration_server: C,
+        power_manager: P,
     ) -> Self {
         display.clear().unwrap();
         Application {
@@ -58,6 +63,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
             configuration_manager: ConfigurationManager::new(persistent_storage),
             network,
             configuration_server,
+            power_manager,
             behaviour: Behaviour::new(),
             event_queue: VecDeque::new(),
         }
@@ -207,7 +213,8 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
         if let Ok(()) = self
                 .configuration_manager
                 .clean_persistent_storage() {
-                    self.publish_event(Event::InvalidConfiguration);
+            self.publish_event(Event::InvalidConfiguration);
+            self.power_manager.reset();
         } else {
             self.publish_event(Event::Error);
         }
