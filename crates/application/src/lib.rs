@@ -161,9 +161,12 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
                 }
             }
 
-            let _ = self
+            if let Err(e) = self
                 .configuration_manager
-                .store_to_persistent_storage(self.configuration.clone());
+                .store_to_persistent_storage(self.configuration.clone()) {
+                error!("Failed to write to persistent storage: {}", e);
+                self.publish_event(Event::Error);
+            }
 
             self.publish_event(Event::ValidConfiguration);
         }
@@ -201,7 +204,13 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
 
     fn clean_config(&mut self) {
         self.configuration = Configuration::default();
-        self.publish_event(Event::InvalidConfiguration);
+        if let Ok(()) = self
+                .configuration_manager
+                .clean_persistent_storage() {
+                    self.publish_event(Event::InvalidConfiguration);
+        } else {
+            self.publish_event(Event::Error);
+        }
     }
 
     fn error(&mut self) {

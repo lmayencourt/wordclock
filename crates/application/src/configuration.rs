@@ -14,6 +14,11 @@ const WIFI_SSID_KEY: &str = "wifi_ssid";
 const WIFI_PASSWORD_KEY: &str = "wifi_password";
 const NIGHT_START_KEY: &str = "night_start";
 const NIGHT_END_KEY: &str = "night_end";
+const VALID_CONFIG_KEY: &str = "valid_config";
+
+/// Value used to tag a valid/invalid config in persistent storage
+const INVALID_CONFIG_VALUE: &str = "1";
+const VALID_CONFIG_VALUE: &str = "0";
 
 /// REGEX used to parse the http get query string containing the configuration
 const CONFIGURATION_QUERY_STRING_REGEX: &str = r"^\/get\?input_wifi_ssid=(?P<ssid>.*)&input_wifi_password=(?P<password>.*)&input_night_mode_start=(?P<night_start>[\%3A0-9]*)&input_night_mode_end=(?P<night_end>[\%3A0-9]*)";
@@ -175,6 +180,21 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
     ///
     /// Returned Configuration can be in `Invalid`.
     pub fn load_from_persistent_storage(&mut self) -> Configuration {
+        match self.storage_backend.load_string(VALID_CONFIG_KEY) {
+            Ok(value) => {
+                if value != VALID_CONFIG_VALUE {
+                    return Configuration {
+                        state: ConfigurationState::Invalid,
+                    }
+                }
+            },
+            _ => {
+                return Configuration {
+                    state: ConfigurationState::Invalid,
+                }
+            }
+        }
+
         let ssid: String;
         match self.storage_backend.load_string(WIFI_SSID_KEY) {
             Ok(value) => ssid = value,
@@ -256,10 +276,21 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
                 self.storage_backend
                     .store_string(NIGHT_END_KEY, night_end.to_string().as_str())?;
             }
+            self.storage_backend
+                .store_string(VALID_CONFIG_KEY, VALID_CONFIG_VALUE)?;
         } else {
             return Err(anyhow!("Can't store invalid configuration"));
         }
 
+        Ok(())
+    }
+
+    /// Clean the Configuration validity flag in persistent memory.
+    ///
+    /// # Error
+    /// The functions will return an error if the hardware fails to carry the operation.
+    pub fn clean_persistent_storage(&mut self) -> Result<()> {
+        self.storage_backend.store_string(VALID_CONFIG_KEY, INVALID_CONFIG_VALUE)?;
         Ok(())
     }
 }

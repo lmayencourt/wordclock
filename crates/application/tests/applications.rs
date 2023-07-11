@@ -379,6 +379,7 @@ fn menu_clean_configuration() {
 
     assert_eq!(app.get_current_state(), State::CleanConfig);
     assert!(app.configuration.is_invalid());
+    assert_eq!(app.configuration_manager.load_from_persistent_storage(), Configuration::default());
 
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);
