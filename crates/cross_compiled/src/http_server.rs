@@ -121,7 +121,10 @@ impl ConfigurationServer for HttpServer {
         GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().configuration_received
     }
 
-    fn get_config_uri(&self) -> Option<String> {
-        GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().uri.clone()
+    fn get_config_uri(&mut self) -> Option<String> {
+        let uri = GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().uri.clone();
+        GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().uri = None;
+        GLOBAL_CONFIG_SERVER_STATE.lock().unwrap().configuration_received = false;
+        uri
     }
 }

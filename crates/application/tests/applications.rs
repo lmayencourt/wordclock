@@ -136,8 +136,13 @@ impl ConfigurationServer for FakeConfigServer {
         self.is_config_received
     }
 
-    fn get_config_uri(&self) -> Option<String> {
-        Some(String::from("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=23%3A30&input_night_mode_end=04%3A40"))
+    fn get_config_uri(&mut self) -> Option<String> {
+        if self.is_config_received {
+            self.is_config_received = false;
+            Some(String::from("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=23%3A30&input_night_mode_end=04%3A40"))
+        } else {
+            None
+        }
     }
 }
 
@@ -295,6 +300,7 @@ fn valid_config_from_configuration_start_displaying_time() {
 
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);
+    assert_eq!(app.configuration_server.get_config_uri(), None);
 
     app.run();
     assert_eq!(app.get_current_state(), State::DisplayTime);

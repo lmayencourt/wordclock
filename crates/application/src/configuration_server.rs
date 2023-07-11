@@ -9,5 +9,6 @@ pub trait ConfigurationServer {
     fn is_configuration_received(&self) -> bool;
 
     // Return the HTTP URI query string if `is_configuration_received()` returned `true`
-    fn get_config_uri(&self) -> Option<String>;
+    // The URI can only be returned once. The received flag and URI will be cleaned after this call.
+    fn get_config_uri(&mut self) -> Option<String>;
 }
