@@ -7,11 +7,6 @@ state Configuration
 state Started {
     state DisplayTime
     state NightMode
-    state Menu {
-        state Fota
-        state CleanConfig
-        state ExitMenu
-    }
     state Idle
 }
 state Error
@@ -29,10 +24,6 @@ state Started {
     Menu --> Menu: EnterShortPush
     Menu --> DisplayTime: ExitMenu
     Menu -up-> Startup: InvalidConfiguration
-
-    Fota -> CleanConfig: EnterShortPush
-    CleanConfig -> ExitMenu: EnterShortPush
-    ExitMenu -> Fota: EnterShortPush
 
     DisplayTime --> Idle: GoToSleep
     DisplayTime <-- Idle: Wakeup
