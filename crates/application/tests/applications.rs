@@ -9,6 +9,7 @@ use anyhow::{anyhow, Result};
 use application::behaviour::*;
 use application::configuration::Configuration;
 use application::configuration_server::ConfigurationServer;
+use application::firmware_update::FirmwareUpdate;
 use application::power_manager::PowerManager;
 use application::time_source::TimeSourceError;
 use application::*;
@@ -154,8 +155,23 @@ impl PowerManager for FakePowerManager {
     }
 }
 
+struct FakeFirmwareUpdate;
+
+impl FirmwareUpdate for FakeFirmwareUpdate {
+    fn read_update_version(&self) -> Result<version::Version> {
+        Ok(version::Version::new(1, 1, 0, None))
+    }
+
+    fn download_update(&self) -> Result<()> {
+        Ok(())
+    }
+
+    fn reboot_to_new_image(&self) {
+    }
+}
+
 fn get_application(
-) -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer, FakePowerManager> {
+) -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer, FakePowerManager, FakeFirmwareUpdate> {
     let display = FakeDisplay {
         state: FakeDisplayState::Clean,
     };
@@ -174,6 +190,7 @@ fn get_application(
         is_config_received: false,
     };
     let power_manager = FakePowerManager;
+    let firmware_update = FakeFirmwareUpdate;
 
     Application::new(
         display,
@@ -182,6 +199,7 @@ fn get_application(
         network,
         configuration_server,
         power_manager,
+        firmware_update,
     )
 }
 
@@ -193,6 +211,7 @@ fn run_startup(
         FakeNetwork,
         FakeConfigServer,
         FakePowerManager,
+        FakeFirmwareUpdate,
     >,
 ) {
     assert_eq!(app.get_current_state(), State::Initial);
@@ -209,6 +228,7 @@ fn preset_configuration(
         FakeNetwork,
         FakeConfigServer,
         FakePowerManager,
+        FakeFirmwareUpdate,
     >,
 ) {
     let configuration = Configuration::new(
@@ -230,6 +250,7 @@ fn goto_display_time(
         FakeNetwork,
         FakeConfigServer,
         FakePowerManager,
+        FakeFirmwareUpdate,
     >,
 ) {
     preset_configuration(app);
@@ -246,6 +267,7 @@ fn goto_menu(
         FakeNetwork,
         FakeConfigServer,
         FakePowerManager,
+        FakeFirmwareUpdate,
     >,
 ) {
     goto_display_time(app);

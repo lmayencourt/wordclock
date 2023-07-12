@@ -40,6 +40,9 @@ impl Version {
 
     /// Return a version represented by the given string
     ///
+    /// The function used a regex to parse the provided string slice.
+    /// The memory usage for this parsing is currently huge ~25kB !!
+    ///
     /// # Error
     /// Return an error if provided string doesn't represent a semantic version.
     pub fn from_string(version: &str) -> Result<Self> {

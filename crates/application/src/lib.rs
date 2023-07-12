@@ -11,6 +11,7 @@ use behaviour::*;
 use configuration::{Configuration, ConfigurationManager, PersistentStorage};
 use configuration_server::ConfigurationServer;
 use display::Display;
+use firmware_update::FirmwareUpdate;
 use network::Network;
 use power_manager::PowerManager;
 use time_source::TimeSource;
@@ -19,6 +20,7 @@ pub mod behaviour;
 pub mod configuration;
 pub mod configuration_server;
 pub mod display;
+pub mod firmware_update;
 pub mod network;
 pub mod power_manager;
 pub mod time;
@@ -32,6 +34,7 @@ pub struct Application<
     N: Network,
     C: ConfigurationServer,
     P: PowerManager,
+    F: FirmwareUpdate,
 > {
     pub display: D,
     pub time_source: T,
@@ -40,12 +43,13 @@ pub struct Application<
     pub network: N,
     pub configuration_server: C,
     pub power_manager: P,
+    pub firmware_update: F,
     behaviour: Behaviour,
     event_queue: VecDeque<Event>,
 }
 
-impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer, P: PowerManager>
-    Application<D, T, S, N, C, P>
+impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer, P: PowerManager, F: FirmwareUpdate>
+    Application<D, T, S, N, C, P, F>
 {
     pub fn new(
         mut display: D,
@@ -54,6 +58,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
         network: N,
         configuration_server: C,
         power_manager: P,
+        firmware_update: F,
     ) -> Self {
         display.clear().unwrap();
         Application {
@@ -64,6 +69,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
             network,
             configuration_server,
             power_manager,
+            firmware_update,
             behaviour: Behaviour::new(),
             event_queue: VecDeque::new(),
         }
@@ -93,7 +99,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
             State::MenuFota => (),
             State::MenuCleanConfig => (),
             State::MenuExit => (),
-            State::Fota => self.firmate_update(),
+            State::Fota => self.firmware_update(),
             State::CleanConfig => self.clean_config(),
             _ => self.error(),
         }
@@ -206,7 +212,38 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
         }
     }
 
-    fn firmate_update(&mut self) {}
+    fn firmware_update(&mut self) {
+        if let Err(error) = self.network.connect() {
+            error!("Failed to connect to network: {}", error);
+            self.publish_event(Event::Error);
+        }
+
+        match self.firmware_update.read_update_version() {
+            Ok(version) => info!("Available version {}", version),
+            Err(e) => {
+                error!("Failed to read update version: {}", e);
+                self.publish_event(Event::Error);
+            }
+        }
+
+        match self.firmware_update.download_update() {
+            Ok(()) => {
+                info!("Update ready, restart device");
+                // esp_idf_hal::delay::FreeRtos::delay_ms(5000);
+
+                if let Err(error) = self.network.disconnect() {
+                    error!("Failed to disconnect to network: {}", error);
+                    self.publish_event(Event::Error);
+                }
+
+                self.firmware_update.reboot_to_new_image();
+            },
+            Err(e) => {
+                error!("Failed to download update: {}", e);
+                self.publish_event(Event::Error);
+            }
+        }
+    }
 
     fn clean_config(&mut self) {
         self.configuration = Configuration::default();

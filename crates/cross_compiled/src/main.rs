@@ -35,6 +35,7 @@ use cross_compiled::led_driver::WS2812;
 use cross_compiled::http_server;
 use cross_compiled::network;
 use cross_compiled::network_time;
+use cross_compiled::ota_update::OtaUpdate;
 use cross_compiled::persistent_settings::NonVolatileStorage;
 use cross_compiled::rgb_led_strip_matrix;
 
@@ -79,7 +80,8 @@ fn main() -> Result<()> {
 
     let persistent_storage = NonVolatileStorage;
     let power_manager = Esp32Soc;
-    let mut application = Application::new(display, time_source, persistent_storage, network, http, power_manager);
+    let firmware_update = OtaUpdate;
+    let mut application = Application::new(display, time_source, persistent_storage, network, http, power_manager, firmware_update);
 
     application.publish_event(Event::Init);
     application.run();

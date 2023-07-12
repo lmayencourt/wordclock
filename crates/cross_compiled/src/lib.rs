@@ -3,7 +3,7 @@
  */
 
 pub mod esp32_soc;
-pub mod firmware_update;
+pub mod ota_update;
 pub mod led_driver;
 pub mod http_server;
 pub mod network;
