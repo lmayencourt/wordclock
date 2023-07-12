@@ -98,13 +98,22 @@ impl FirmwareUpdate for OtaUpdate {
         if let Ok(ota_version_len) = client.read(&mut ota_version_file) {
             // Important to strip down the buffer to only the read length.
             // String parsing will fail otherwise...
-            let ota_version_string = ota_version_file[0..ota_version_len].to_vec();
+            let ota_version_string = String::from_utf8(ota_version_file[0..ota_version_len].to_vec()).unwrap();
+
+            // Anomaly-003: Stack overflow when parsing OTA version
+            //
             // This need ~24kB of heap memory. It will fail if heap usage is to
-            // high. Changing CONFIG_ESP_MAIN_TASK_STACK_SIZE may affect the
-            // heap available at this stage.
+            // high. Changing CONFIG_ESP_MAIN_TASK_STACK_SIZE higher than 20kB
+            // may affect the heap available at this stage. The configuration
+            // server need ~25kB of main stack to parse properly the
+            // configuration URI. There is then an unresolved conflict here.
             // To see how much heap is available, uncomment:
             // unsafe { heap_caps_print_heap_info(0); }
-            Ok(Version::from_utf8(&ota_version_string)?)
+            //
+            // Currently only print the version here, and return a dummy value.
+            info!("Available version {}", ota_version_string);
+            // Ok(Version::from_utf8(&ota_version_string)?)
+            Ok(Version::new(2, 1, 0, Some("dummy")))
         } else {
             return Err(anyhow!("Failed to read OTA version file"));
         }
