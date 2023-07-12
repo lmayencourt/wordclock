@@ -1,0 +1,13 @@
+# Default Partition layout for ota from:
+# https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/partition-tables.html
+# Remove factory partition to allow bigger application partition size.
+# Total of FLASH memory is only 4MB (0x40'0000)
+# There is room for 2x ~1.9MB images.
+
+# ESP-IDF Partition Table
+# Name,   Type, SubType, Offset,  Size, Flags
+nvs,      data, nvs,     0x9000,  0x4000,
+otadata,  data, ota,     0xd000,  0x2000,
+phy_init, data, phy,     0xf000,  0x1000,
+ota_0,    app,  ota_0,   , 0x1F0000,
+ota_1,    app,  ota_1,   , 0x1F0000,

@@ -1,0 +1,30 @@
+@startuml
+mainframe Building blocks - level 1
+
+rectangle "WordClock Hardware" {
+    port "Wi-Fi" as Wifi
+    port "Push-buttons" as Push_buttons
+    port "Clock front face" as Clk_face
+
+    component "WordClock Firmware" {
+        component Bootloader
+        component Application {
+            component "Platform abstraction" as Pal
+        }
+        component Platform
+    }
+
+    component "Real Time Clock" as Rtc
+    component "Led Matrix" as Led_matrix
+}
+
+Bootloader -- Application
+Pal -- Platform
+Platform -- Rtc
+Platform -- Led_matrix
+
+Platform -- Push_buttons
+Platform -- Wifi
+Led_matrix -- Clk_face
+
+@enduml

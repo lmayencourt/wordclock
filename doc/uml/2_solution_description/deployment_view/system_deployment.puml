@@ -1,0 +1,28 @@
+@startuml
+frame "Deployment view" {
+
+actor "Embedded engineer" as Embedded_engineer
+file "Firmware binary" as Fw_binary << artifact >>
+file "Booloader binary" as Bootloader_binary << artifact >>
+file "Merged binary" as Xtensa_binary << artifact >>
+
+node "WordClock hardware" as Clk_hw << Device >> {
+
+
+    Node "ESP32 Devkit v1" as Esp32 << Device >> {
+        node xtensa << System On Chip >> {
+            component "WordClock firmware" as Clk_fw
+        }
+    }
+}
+
+Embedded_engineer ..> Fw_binary: release
+Embedded_engineer ..> Bootloader_binary: release
+
+Fw_binary ..> Xtensa_binary: merged into
+Bootloader_binary ..> Xtensa_binary: merged into
+
+Xtensa_binary .> Clk_fw: deploy
+
+}
+@enduml

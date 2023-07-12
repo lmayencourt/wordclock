@@ -1,0 +1,10 @@
+[book]
+title = "WordClock documentation"
+authors = ["Louis Mayencourt"]
+description = "Capture the important design concept and decisions of the WordClock project"
+language = "en"
+multilingual = false
+src = "doc/"
+
+[build]
+build-dir = "target/architecture"

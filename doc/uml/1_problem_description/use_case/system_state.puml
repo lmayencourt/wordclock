@@ -1,0 +1,39 @@
+@startuml
+
+mainframe System state
+
+state Startup
+state Configuration
+state Started {
+    state DisplayTime
+    state NightMode
+    state Idle
+}
+state Error
+
+[*] --> Startup: Init
+
+Startup --> Configuration: InvalidConfiguration
+Startup --> Started: Start
+
+state Started {
+    Configuration -> Startup: ValidConfiguration
+
+    [*] --> DisplayTime
+    DisplayTime --> Menu: EnterShortPush \nEnterLongPush
+    Menu --> Menu: EnterShortPush
+    Menu --> DisplayTime: ExitMenu
+    Menu -up-> Startup: InvalidConfiguration
+
+    DisplayTime --> Idle: GoToSleep
+    DisplayTime <-- Idle: Wakeup
+    DisplayTime -> DisplayTime: Tick
+
+    DisplayTime --> NightMode: NightTime
+    DisplayTime <-- NightMode: DayTime
+}
+
+Started --> Error: Error/Panic
+' Configuration --> Error: Error/Panic
+
+@enduml

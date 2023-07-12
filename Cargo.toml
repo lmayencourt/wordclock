@@ -1,0 +1,14 @@
+[workspace]
+
+# Use a flat workspace for simplicity, as suggested in
+# https://matklad.github.io/2021/08/22/large-rust-workspaces.html
+members = [
+    "crates/*"
+]
+
+# Cross-compiled cartes is explicitely exlucded from the worksapce.
+# There is apparently no easy way to currently define different "target" 
+# for `cargo build`.
+# This implies that building the firmware must be performed from the
+# `cratest/cross_compiled` directory.
+exclude = ["crates/cross_compiled"]

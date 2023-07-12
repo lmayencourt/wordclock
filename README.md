@@ -1,7 +1,7 @@
 # Wordclock
 
-Display the time in swiss-german.
-The clock get the time from the Internet. For this to work, a wifi network is needed.
+Display the time in swiss-german, on a custom made hardware.
+The clock get the time from the internet. A network connection with WiFI is needed.
 
 <img src="./doc/images/leds_matrix_assembled.png" width="300"/>
 
@@ -24,3 +24,38 @@ To enter the menu, press the "BOOT" button until the "uhr" is displayed (it may 
  * 1 green dot: Booting.
  * 2 blue dots: Configuration mode.
  * 1 blinking red dot: Error. Press "EN" bouton to restart the clock.
+
+## Project management
+A [GitHub project](https://github.com/users/lmayencourt/projects/1/) is used for tasks management.
+
+## Deploy the firmware to an ESP32 board
+````
+. ~/export-esp.sh
+cargo build
+espflash /dev/tty.usbserial-0001 crates/cross_compiled/target/xtensa-esp32-espidf/debug/cross_compiled --flash-freq 80M --flash-size 4MB --flash-mode DIO --speed 921600
+espmonitor /dev/tty.usbserial-2110
+````
+
+Add `--monitor` option to `espflash` to directly open monitoring after flashing.
+
+Follow the instruction from https://github.com/esp-rs/esp-idf-template to create similar project from template.
+
+## Setup rust analyzer for ESP32
+setup the environment variables in `.cargo/config.toml` to match the `export-esp.sh` values.
+
+## Documentation
+### Architecture documentation
+`mdbook` is used for rendering the architecture documentation in `doc/architecture/`.
+
+It can be generated with:
+````
+mdbook build
+````
+
+To build and open locally the documentation, use:
+````
+mdbook serve --open
+````
+
+## License
+Licensed under MIT license ([LICENSE-MIT](LICENSE.txt) or http://opensource.org/licenses/MIT)
