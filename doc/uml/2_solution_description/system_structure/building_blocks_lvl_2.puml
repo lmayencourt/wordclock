@@ -12,6 +12,7 @@ component "WordClock Firmware" as clk_fw{
         component "Platform abstraction" as pal {
             interface Display
             interface PersistentStorage
+            interface PowerManger
             interface Network
             interface TimeSource
             interface FirmwareUpdate
@@ -20,6 +21,7 @@ component "WordClock Firmware" as clk_fw{
     }
 
     component Platform {
+        rectangle Esp32Soc
         rectangle RgbLedStripMatrix
         rectangle LedDriver
         rectangle NTP
@@ -44,6 +46,7 @@ Behaviour ..> Version: use
 Behaviour ..> FirmwareUpdate: use
 Behaviour ..> TimeSource: use
 Behaviour ..> ConfigurationServer: use
+Behaviour ..> PowerManger: use
 Time <.. TimeSource: use
 ConfigurationManager ..> PersistentStorage: use
 ConfigurationManager ..> Configuration: use
@@ -58,6 +61,7 @@ TimeSource <|-- RTC
 ConfigurationServer <|-- HttpServer
 FirmwareUpdate ..> OTA: use
 FirmwareUpdate ..> HttpClient: use
+PowerManger <|-- Esp32Soc
 
 RTC ...> Rtc
 LedDriver ..> Led_matrix
