@@ -185,9 +185,9 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
                 if value != VALID_CONFIG_VALUE {
                     return Configuration {
                         state: ConfigurationState::Invalid,
-                    }
+                    };
                 }
-            },
+            }
             _ => {
                 return Configuration {
                     state: ConfigurationState::Invalid,
@@ -290,7 +290,8 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
     /// # Error
     /// The functions will return an error if the hardware fails to carry the operation.
     pub fn clean_persistent_storage(&mut self) -> Result<()> {
-        self.storage_backend.store_string(VALID_CONFIG_KEY, INVALID_CONFIG_VALUE)?;
+        self.storage_backend
+            .store_string(VALID_CONFIG_KEY, INVALID_CONFIG_VALUE)?;
         Ok(())
     }
 }

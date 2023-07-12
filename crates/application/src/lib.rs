@@ -48,8 +48,15 @@ pub struct Application<
     event_queue: VecDeque<Event>,
 }
 
-impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: ConfigurationServer, P: PowerManager, F: FirmwareUpdate>
-    Application<D, T, S, N, C, P, F>
+impl<
+        D: Display,
+        T: TimeSource,
+        S: PersistentStorage,
+        N: Network,
+        C: ConfigurationServer,
+        P: PowerManager,
+        F: FirmwareUpdate,
+    > Application<D, T, S, N, C, P, F>
 {
     pub fn new(
         mut display: D,
@@ -96,9 +103,15 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
             State::DisplayTime => self.display_time(),
             State::NightMode => self.night_mode(),
             State::Configuration => self.configuration(),
-            State::MenuFota => {let _ = self.display.draw_progress(1);},
-            State::MenuCleanConfig => {let _ = self.display.draw_progress(2);},
-            State::MenuExit => {let _ = self.display.draw_progress(3);},
+            State::MenuFota => {
+                let _ = self.display.draw_progress(1);
+            }
+            State::MenuCleanConfig => {
+                let _ = self.display.draw_progress(2);
+            }
+            State::MenuExit => {
+                let _ = self.display.draw_progress(3);
+            }
             State::Fota => self.firmware_update(),
             State::CleanConfig => self.clean_config(),
             _ => self.error(),
@@ -175,7 +188,8 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
 
             if let Err(e) = self
                 .configuration_manager
-                .store_to_persistent_storage(self.configuration.clone()) {
+                .store_to_persistent_storage(self.configuration.clone())
+            {
                 error!("Failed to write to persistent storage: {}", e);
                 self.publish_event(Event::Error);
             }
@@ -237,7 +251,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
                 }
 
                 self.firmware_update.reboot_to_new_image();
-            },
+            }
             Err(e) => {
                 error!("Failed to download update: {}", e);
                 self.publish_event(Event::Error);
@@ -247,9 +261,7 @@ impl<D: Display, T: TimeSource, S: PersistentStorage, N: Network, C: Configurati
 
     fn clean_config(&mut self) {
         self.configuration = Configuration::default();
-        if let Ok(()) = self
-                .configuration_manager
-                .clean_persistent_storage() {
+        if let Ok(()) = self.configuration_manager.clean_persistent_storage() {
             self.publish_event(Event::InvalidConfiguration);
             self.power_manager.reset();
         } else {

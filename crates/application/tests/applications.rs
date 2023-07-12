@@ -151,8 +151,7 @@ impl ConfigurationServer for FakeConfigServer {
 struct FakePowerManager;
 
 impl PowerManager for FakePowerManager {
-    fn reset(&self) {
-    }
+    fn reset(&self) {}
 }
 
 struct FakeFirmwareUpdate;
@@ -166,12 +165,18 @@ impl FirmwareUpdate for FakeFirmwareUpdate {
         Ok(())
     }
 
-    fn reboot_to_new_image(&self) {
-    }
+    fn reboot_to_new_image(&self) {}
 }
 
-fn get_application(
-) -> Application<FakeDisplay, MockTime, FakePersistentStorage, FakeNetwork, FakeConfigServer, FakePowerManager, FakeFirmwareUpdate> {
+fn get_application() -> Application<
+    FakeDisplay,
+    MockTime,
+    FakePersistentStorage,
+    FakeNetwork,
+    FakeConfigServer,
+    FakePowerManager,
+    FakeFirmwareUpdate,
+> {
     let display = FakeDisplay {
         state: FakeDisplayState::Clean,
     };
@@ -421,7 +426,10 @@ fn menu_clean_configuration() {
 
     assert_eq!(app.get_current_state(), State::CleanConfig);
     assert!(app.configuration.is_invalid());
-    assert_eq!(app.configuration_manager.load_from_persistent_storage(), Configuration::default());
+    assert_eq!(
+        app.configuration_manager.load_from_persistent_storage(),
+        Configuration::default()
+    );
 
     app.run();
     assert_eq!(app.get_current_state(), State::Startup);

@@ -2,7 +2,7 @@
 * Copyright (c) 2023 Louis Mayencourt
 */
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
 use crate::version::Version;
 
