@@ -6,7 +6,7 @@ The clock get the time from the internet. A network connection with WiFI is need
 <img src="./doc/images/leds_matrix_assembled.png" width="300"/>
 
 ## User guide
-The [User guide](https://lmayencourt.github.io/wordclock/) is part of the GitHub page documentation.
+The [User guide](https://lmayencourt.github.io/wordclock/user_guide_hw_v2.html) is part of the GitHub page documentation.
 
 ## Project management
 A [GitHub project](https://github.com/users/lmayencourt/projects/1/) is used for tasks management.
