@@ -18,6 +18,10 @@ jobs:
         mkdir mdbook
         curl -sSL $url | tar -xz --directory=./mdbook
         echo `pwd`/mdbook >> $GITHUB_PATH
+    - name: Generate plantuml diagram
+      uses: Timmy/plantuml-action@v1
+      with:
+        args: '-png **.puml -o /github/workspace/doc/uml/exported'
     - name: Deploy GitHub Pages
       run: |
         # This assumes your book is in the root of your repository.
