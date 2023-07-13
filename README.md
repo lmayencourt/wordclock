@@ -1,9 +1,7 @@
 # Wordclock
+*WordClock* is a hobby project, aiming to create a nice looking time keeping art work.
 
-Display the time in swiss-german, on a custom made hardware.
-The clock get the time from the internet. A network connection with WiFI is needed.
-
-<img src="./doc/images/leds_matrix_assembled.png" width="300"/>
+The secondary goal is to have a project to experiment with various technologies like Rust, laser cutting, 3d printing, and various engineering skills like software architecture, software requirements, Test-Driven Development and technical documentation.
 
 ## User guide
 The [User guide](https://lmayencourt.github.io/wordclock/user_guide_hw_v2.html) is part of the GitHub page documentation.
