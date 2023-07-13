@@ -5,47 +5,26 @@ The clock get the time from the internet. A network connection with WiFI is need
 
 <img src="./doc/images/leds_matrix_assembled.png" width="300"/>
 
-## Configuration
-
-Connect to "WordClock" wifi and go to [http://192.168.4.1](http://192.168.4.1) in a browser. Enter your wifi name (SSID) and your wifi password.
-If you want the clock to be off during the night, set the "Night mode" start and end times.
-
-> **Note:** You may need to restart the clock by pressing the "EN" button.
-
-## Menu
-
-To enter the menu, press the "BOOT" button until the "uhr" is displayed (it may take up to 15 secs to reach the menu). A single push of the "BOOT" button changes the menu, a long push (< 2 secs) validate the menu selection and trigger the associated actions:
- * uhr: Go back to time display.
- * eis: Check if a new version of the firmware is available and download it.
- * zwöi: Erase the current configuration and switch back to configuration mode.
-
-## Display meanings
-
- * 1 green dot: Booting.
- * 2 blue dots: Configuration mode.
- * 1 blinking red dot: Error. Press "EN" bouton to restart the clock.
+## User guide
+The [User guide](https://lmayencourt.github.io/wordclock/) is part of the GitHub page documentation.
 
 ## Project management
 A [GitHub project](https://github.com/users/lmayencourt/projects/1/) is used for tasks management.
+The project follow the [Semantic versioning](https://semver.org) scheme.
 
 ## Deploy the firmware to an ESP32 board
 ````
 . ~/export-esp.sh
-cargo build
-espflash /dev/tty.usbserial-0001 crates/cross_compiled/target/xtensa-esp32-espidf/debug/cross_compiled --flash-freq 80M --flash-size 4MB --flash-mode DIO --speed 921600
-espmonitor /dev/tty.usbserial-2110
+cargo xbuild
+espflash /dev/tty.usbserial-0001 crates/cross_compiled/target/xtensa-esp32-espidf/debug/cross_compiled --flash-freq 80M --flash-size 4MB --flash-mode DIO --speed 921600 --partition-table crates/cross_compiled/esp32_ota_partitions.csv
 ````
 
-Add `--monitor` option to `espflash` to directly open monitoring after flashing.
+Add `--monitor` option to `espflash` to open the serial consol of the device directly after flashing.
 
 Follow the instruction from https://github.com/esp-rs/esp-idf-template to create similar project from template.
 
-## Setup rust analyzer for ESP32
-setup the environment variables in `.cargo/config.toml` to match the `export-esp.sh` values.
-
 ## Documentation
-### Architecture documentation
-`mdbook` is used for rendering the architecture documentation in `doc/architecture/`.
+`mdbook` is used for rendering the documentation in the `doc/` folder.
 
 It can be generated with:
 ````
@@ -55,6 +34,22 @@ mdbook build
 To build and open locally the documentation, use:
 ````
 mdbook serve --open
+````
+
+A [GitHub page](https://lmayencourt.github.io/wordclock/) host the generated documentation, built automatically by GitHub action on every pull-request.
+
+## Structure of the repository
+````
+.
+|-- 3d printed              // 3d printed part of clock
+|-- book.toml               // mdbook configuration for rendering the documentation
+|-- Cargo.toml              // Rust workspace configuration
+|-- crates                  // Rust source code
+|-- doc                     // Project documentation
+|-- LICENSE.txt
+|-- ota-image               // Firmware Over The Air update image
+|-- README.md               // This file
+|-- target                  // Build output for Rust binary and documentation
 ````
 
 ## License

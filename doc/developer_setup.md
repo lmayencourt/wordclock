@@ -12,6 +12,9 @@ Create a `.vscode/settings.json` with the following content:
 }
 ````
 
+## Setup rust analyzer for ESP32
+setup the environment variables in `.cargo/config.toml` to match the `export-esp.sh` values.
+
 ## Rust references
 
 - [Rust by Example](https://doc.rust-lang.org/rust-by-example/index.html)

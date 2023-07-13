@@ -1,9 +1,5 @@
 # Summary
 
-[Draft User guide]()
-
----
-
 # System architecture
 // Based on arc32 template document: https://docs.arc42.org/home/
 - [Draft Introduction and goals](./architecture/1_introduction_and_goals.md)
@@ -21,5 +17,16 @@
 
 ---
 
-[Developer setup](./developer_setup.md)
-[Bug avoided](./bug_avoided.md)
+# User guide
+
+- [User guide 3D printed clock](./user_guide_hw_v1.md)
+- [User guide wood clock](./user_guide_hw_v2.md)
+
+---
+
+# Developer
+
+- [Developer setup](./developer_setup.md)
+- [Bug avoided](./bug_avoided.md)
+- [Esp32 learnings](./esp32_learnings.md)
+- [Release process](./release_process.md)
