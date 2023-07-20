@@ -27,10 +27,10 @@ const TX_BUF_SIZE: usize = 4096;
 
 /// URL of the update version file hosted in GitHub
 /// The file contains the version of the latest update available to download.
-const OTA_VERSION_FILE_URL: &str = "https://raw.githubusercontent.com/lmayencourt/wordclock/released/version.txt?";
+const OTA_VERSION_FILE_URL: &str = "https://raw.githubusercontent.com/lmayencourt/wordclock/rust/ota-image/version.txt?";
 
 /// URL of the update firmware files hosted in GitHub
-const OTA_FIRMWARE_FILE_URL: &str = "https://raw.githubusercontent.com/lmayencourt/wordclock/rust/firmware-ota.bin?";
+const OTA_FIRMWARE_FILE_URL: &str = "https://raw.githubusercontent.com/lmayencourt/wordclock/rust/ota-image/firmware-ota.bin?";
 
 /// Root CA certificate used for TLS connection.
 const ROOT_CA_CERTIFICATE: &[u8;1391] = b" \
