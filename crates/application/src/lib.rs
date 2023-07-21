@@ -7,6 +7,8 @@ use std::collections::VecDeque;
 use std::thread;
 use std::time::Duration;
 
+use anyhow::Result;
+
 use behaviour::*;
 use configuration::{Configuration, ConfigurationManager, PersistentStorage};
 use configuration_server::ConfigurationServer;
@@ -187,6 +189,12 @@ impl<
                 }
             }
 
+            if let Err(e) = self.verify_network_configuration() {
+                error!("Invalid Network configuration provided: {}", e);
+                self.publish_event(Event::Error);
+                return;
+            }
+
             if let Err(e) = self
                 .configuration_manager
                 .store_to_persistent_storage(self.configuration.clone())
@@ -197,6 +205,26 @@ impl<
 
             self.publish_event(Event::ValidConfiguration);
         }
+    }
+
+    fn verify_network_configuration(&mut self) -> Result<()>{
+        if let Err(error) = self.network.configure(
+            &self.configuration.get_ssid().unwrap(),
+            &self.configuration.get_password().unwrap(),
+        ) {
+            error!("Failed to configure wifi: {}", error);
+            self.publish_event(Event::Error);
+        }
+        if let Err(error) = self.network.connect() {
+            error!("Failed to connect to network: {}", error);
+            self.publish_event(Event::Error);
+        }
+        if let Err(error) = self.network.disconnect() {
+            error!("Failed to disconnect to network: {}", error);
+            self.publish_event(Event::Error);
+        }
+
+        Ok(())
     }
 
     fn display_time(&mut self) {
