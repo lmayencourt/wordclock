@@ -129,6 +129,12 @@ mod tests {
         assert_eq!(version.minor, 2);
         assert_eq!(version.patch, 3);
         assert_eq!(version.identifiers, Some(String::from("rc1")));
+
+        let version = Version::from_string("2.0.1-117-gf7f35a").unwrap();
+        assert_eq!(version.major, 2);
+        assert_eq!(version.minor, 0);
+        assert_eq!(version.patch, 1);
+        assert_eq!(version.identifiers, Some(String::from("117-gf7f35a")));
     }
 
     #[test]

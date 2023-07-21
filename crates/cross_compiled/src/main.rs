@@ -26,6 +26,7 @@ use esp_idf_svc::systime::EspSystemTime;
 
 use application::Application;
 use application::behaviour::*;
+use application::build_version::BUILD_VERSION_STRING;
 use application::network::Network;
 use application::version::Version;
 
@@ -47,7 +48,7 @@ fn main() -> Result<()> {
     esp_idf_sys::link_patches();
 
     esp_idf_svc::log::EspLogger::initialize_default();
-    info!("WordClock firmware ({}) - ESP32!", Version::from_string("99.99.99")?);
+    info!("WordClock firmware ({}) - ESP32!", Version::from_string(BUILD_VERSION_STRING)?);
 
     let peripherals = Peripherals::take().unwrap();
     let led = PinDriver::output(peripherals.pins.gpio2)?;

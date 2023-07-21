@@ -34,6 +34,16 @@ fn usage() {
 
 fn build_target(args: &[&str]) -> Result<(), anyhow::Error> {
     let sh = Shell::new()?;
+
+    // Generate build version file from git describe
+    // Remove the first char, as the git describe return prefix the version with 'v', e.g.: v1.2.3
+    let git_version = cmd!(sh, "git describe").read()?;
+    let git_version = &git_version[1..&git_version.len()-1];
+    let mut version_file = File::create("crates/application/src/build_version.rs")?;
+    writeln!(version_file, "// This file is generated automatically during build with the result of the git describe command.")?;
+    writeln!(version_file, "// Do not edit manually.\n")?;
+    write!(version_file, "pub const BUILD_VERSION_STRING: &str = \"{}\";", git_version)?;
+
     sh.change_dir("crates/cross_compiled");
     cmd!(sh, "rustup run esp cargo build {args...}").run()?;
     Ok(())

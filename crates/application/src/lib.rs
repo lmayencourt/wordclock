@@ -17,6 +17,7 @@ use power_manager::PowerManager;
 use time_source::TimeSource;
 
 pub mod behaviour;
+pub mod build_version;
 pub mod configuration;
 pub mod configuration_server;
 pub mod display;
