@@ -1,5 +1,5 @@
 # User guide 3D printed clock
-This covers the first iteration of the *WordClock*, with hardware V1, firmware v1.x.x and v2.x.x.
+This covers the first iteration of the *WordClock*, with hardware v1, firmware v1.x.x and v2.x.x.
 
 ![hardware_v1](./images/leds_matrix_assembled.png)
 

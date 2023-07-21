@@ -106,8 +106,8 @@ fn generate_ota_image(args: &[&str]) -> Result<(), anyhow::Error> {
             ))
         }
     }
-    cmd!(sh, "espflash save-image ESP32 --flash-size 2MB crates/cross_compiled/target/xtensa-esp32-espidf/{build_type}/cross_compiled ota-image/firmware-ota.bin").run()?;
-    let mut version_file = File::create("ota-image/version.txt")?;
+    cmd!(sh, "espflash save-image ESP32 --flash-size 2MB crates/cross_compiled/target/xtensa-esp32-espidf/{build_type}/cross_compiled ota-image/hardware-v2/firmware-ota.bin").run()?;
+    let mut version_file = File::create("ota-image/hardware-v2/version.txt")?;
     version_file.write_all(git_version.as_bytes())?;
 
     Ok(())

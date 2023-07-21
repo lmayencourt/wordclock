@@ -35,3 +35,11 @@ I decided to use a String value "0" and "1",
 and neglected a dedicated boolean storage API,
 to achieve a simple implementation, using the already implemented String storage API,
 accepting a possible higher memory footprint of the boolean value in memory.
+
+## FW 2: Directory layout for OTA images
+In the context of releasing the OTA images for the new hardware v2 and Rust implementation,
+facing the need to keep the hardware v1 and firmware v1.x.x/v2.x.x OTA working,
+I decided to keep the hardware v1 OTA image at the root, and move the hardware v2 OTA image into a dedicated `ota-image/hardware-v2/` folder,
+and neglected a dedicated branch `released-v2` or equivalent,
+to achieve a backward compatible layout, and keep the single, easier to maintain release branch,
+accepting that the hardware v1 OTA image stay for now in the root of the repository, and a migration process will be needed to move them to `ota-image/hardware-v2`.
