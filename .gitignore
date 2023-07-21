@@ -5,3 +5,7 @@
 target/
 Cargo.lock
 wifi_pwd.sh
+
+# do not track build-generated files
+crates/application/src/build_version.rs
+doc/uml/exported/
