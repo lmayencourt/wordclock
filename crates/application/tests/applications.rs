@@ -311,10 +311,11 @@ fn invalid_config_start_configuration() {
     app.configuration_server.set_receive_config();
 
     run_startup(&mut app);
+    assert!(app.network.is_access_point);
 
     app.run();
     assert_eq!(app.get_current_state(), State::Configuration);
-    assert!(app.network.is_access_point);
+    assert!(app.network.is_configured);
 }
 
 #[test]

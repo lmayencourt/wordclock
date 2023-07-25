@@ -75,6 +75,9 @@ impl Configuration {
         if let Some(cap) = re.captures(uri) {
             let utf8_encoded_value: String = cap[1].parse()?;
             let ssid: String = url_escape::decode(&utf8_encoded_value).to_string();
+            if ssid.is_empty() {
+                return Err(anyhow!("Empty SSID: {}", uri));
+            }
             let utf8_encoded_value: String = cap[2].parse()?;
             let password: String = url_escape::decode(&utf8_encoded_value).to_string();
             if let Some(value) = cap.name("night_start") {
