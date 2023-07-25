@@ -20,6 +20,7 @@ use time_source::TimeSource;
 
 pub mod behaviour;
 pub mod build_version;
+pub mod color;
 pub mod configuration;
 pub mod configuration_server;
 pub mod display;
@@ -137,6 +138,8 @@ impl<
         if self.configuration.is_valid() {
             info!("Valid configuration");
 
+            self.display.set_default_color(self.configuration.get_display_color().unwrap());
+
             if let Err(error) = self.network.configure(
                 &self.configuration.get_ssid().unwrap(),
                 &self.configuration.get_password().unwrap(),
@@ -185,7 +188,11 @@ impl<
                         info!("New config is {:?}", config);
                         self.configuration = config;
                     }
-                    Err(e) => error!("failed to parse config uri: {}", e),
+                    Err(e) => {
+                        error!("failed to parse config uri: {}", e);
+                        self.publish_event(Event::Error);
+                        return;
+                    }
                 }
             }
 

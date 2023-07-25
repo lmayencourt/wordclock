@@ -8,6 +8,7 @@ use anyhow::{anyhow, Result};
 use regex::Regex;
 
 use crate::time::{Time, TIME_STRING_LENGTH};
+use crate::color::{Color, COLOR_AS_STRING_LENGTH};
 
 /// Key entries used as index for persistent storage.
 const WIFI_SSID_KEY: &str = "wifi_ssid";
@@ -15,13 +16,14 @@ const WIFI_PASSWORD_KEY: &str = "wifi_password";
 const NIGHT_START_KEY: &str = "night_start";
 const NIGHT_END_KEY: &str = "night_end";
 const VALID_CONFIG_KEY: &str = "valid_config";
+const DISPLAY_COLOR_KEY: &str = "display_color";
 
 /// Value used to tag a valid/invalid config in persistent storage
 const INVALID_CONFIG_VALUE: &str = "1";
 const VALID_CONFIG_VALUE: &str = "0";
 
 /// REGEX used to parse the http get query string containing the configuration
-const CONFIGURATION_QUERY_STRING_REGEX: &str = r"^\/get\?input_wifi_ssid=(?P<ssid>.*)&input_wifi_password=(?P<password>.*)&input_night_mode_start=(?P<night_start>[\%3A0-9]*)&input_night_mode_end=(?P<night_end>[\%3A0-9]*)";
+const CONFIGURATION_QUERY_STRING_REGEX: &str = r"^\/get\?input_wifi_ssid=(?P<ssid>.*)&input_wifi_password=(?P<password>.*)&input_night_mode_start=(?P<night_start>[\%3A0-9]*)&input_night_mode_end=(?P<night_end>[\%3A0-9]*)&favcolor=(?P<display_color>[\%230-9a-fA-F]*)";
 
 #[derive(Debug, Clone, PartialEq)]
 struct ConfigurationFields {
@@ -29,6 +31,7 @@ struct ConfigurationFields {
     password: String,
     night_start: Option<Time>,
     night_end: Option<Time>,
+    display_color: Color,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -50,6 +53,7 @@ impl Configuration {
         password: String,
         night_start: Option<Time>,
         night_end: Option<Time>,
+        display_color: Color,
     ) -> Self {
         Self {
             state: ConfigurationState::Valid(ConfigurationFields {
@@ -57,6 +61,7 @@ impl Configuration {
                 password,
                 night_start,
                 night_end,
+                display_color,
             }),
         }
     }
@@ -66,6 +71,7 @@ impl Configuration {
 
         let mut night_start: Option<Time> = None;
         let mut night_end: Option<Time> = None;
+        let mut display_color: Color = Color::default();
         if let Some(cap) = re.captures(uri) {
             let utf8_encoded_value: String = cap[1].parse()?;
             let ssid: String = url_escape::decode(&utf8_encoded_value).to_string();
@@ -86,12 +92,20 @@ impl Configuration {
                 }
             }
 
+            if let Some(value) = cap.name("display_color") {
+                if value.len() >= 6 {
+                    let color = String::from(url_escape::decode(value.as_str()));
+                    display_color = Color::from_rgb_hex_string(&color[1..color.len()])?;
+                }
+            }
+
             Ok(Configuration {
                 state: ConfigurationState::Valid(ConfigurationFields {
                     ssid,
                     password,
                     night_start,
                     night_end,
+                    display_color,
                 }),
             })
         } else {
@@ -137,6 +151,13 @@ impl Configuration {
     pub fn get_night_end(&self) -> Option<Time> {
         match &self.state {
             ConfigurationState::Valid(fields) => fields.night_end,
+            _ => None,
+        }
+    }
+
+    pub fn get_display_color(&self) -> Option<Color> {
+        match &self.state {
+            ConfigurationState::Valid(fields) => Some(fields.display_color),
             _ => None,
         }
     }
@@ -247,12 +268,29 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
             }
         }
 
+        let display_color: Color;
+        match self.storage_backend.load_string(DISPLAY_COLOR_KEY) {
+            Ok(value) => {
+                if value.len() == COLOR_AS_STRING_LENGTH {
+                    display_color = Color::from_rgb_hex_string(&value).unwrap();
+                } else {
+                    display_color = Color::new(0, 0, 255);
+                }
+            },
+            _ => {
+                return Configuration {
+                    state: ConfigurationState::Invalid,
+                }
+            }
+        }
+
         Configuration {
             state: ConfigurationState::Valid(ConfigurationFields {
                 ssid,
                 password,
                 night_start,
                 night_end,
+                display_color,
             }),
         }
     }
@@ -276,6 +314,7 @@ impl<P: PersistentStorage> ConfigurationManager<P> {
                 self.storage_backend
                     .store_string(NIGHT_END_KEY, night_end.to_string().as_str())?;
             }
+            self.storage_backend.store_string(DISPLAY_COLOR_KEY, &configuration.get_display_color().unwrap().to_string())?;
             self.storage_backend
                 .store_string(VALID_CONFIG_KEY, VALID_CONFIG_VALUE)?;
         } else {
@@ -302,15 +341,22 @@ mod tests {
     use std::assert_eq;
 
     #[test]
+    fn from_empty_uri_query_string() {
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=&input_wifi_password=&input_night_mode_start=&input_night_mode_end=&favcolor=");
+        assert!(config.is_err());
+    }
+
+    #[test]
     fn from_uri_query_string() {
-        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=&input_night_mode_end=").unwrap();
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=&input_night_mode_end=&favcolor=").unwrap();
         assert_eq!(
             Configuration {
                 state: ConfigurationState::Valid(ConfigurationFields {
                     ssid: String::from("myhomenetwork"),
                     password: String::from("1234"),
                     night_start: None,
-                    night_end: None
+                    night_end: None,
+                    display_color: Color::new(0, 0, 255),
                 }),
             },
             config
@@ -319,7 +365,7 @@ mod tests {
 
     #[test]
     fn from_uri_query_string_with_night_mode() {
-        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=23%3A30&input_night_mode_end=04%3A40").unwrap();
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=23%3A30&input_night_mode_end=04%3A40&favcolor=").unwrap();
         assert_eq!(
             Configuration {
                 state: ConfigurationState::Valid(ConfigurationFields {
@@ -327,6 +373,7 @@ mod tests {
                     password: String::from("1234"),
                     night_start: Some(Time::new(23, 30, 0).unwrap()),
                     night_end: Some(Time::new(4, 40, 0).unwrap()),
+                    display_color: Color::new(0, 0, 255),
                 }),
             },
             config
@@ -335,7 +382,7 @@ mod tests {
 
     #[test]
     fn from_uri_query_string_with_special_chars() {
-        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=Solnet-1234&input_wifi_password=Secret%40-7&input_night_mode_start=&input_night_mode_end=").unwrap();
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=Solnet-1234&input_wifi_password=Secret%40-7&input_night_mode_start=&input_night_mode_end=&favcolor=").unwrap();
         assert_eq!(
             Configuration {
                 state: ConfigurationState::Valid(ConfigurationFields {
@@ -343,6 +390,24 @@ mod tests {
                     password: String::from("Secret@-7"),
                     night_start: None,
                     night_end: None,
+                    display_color: Color::new(0, 0, 255),
+                }),
+            },
+            config
+        );
+    }
+
+    #[test]
+    fn from_uri_query_string_with_color() {
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=Solnet-1234&input_wifi_password=1234&input_night_mode_start=&input_night_mode_end=&favcolor=%2300ff00").unwrap();
+        assert_eq!(
+            Configuration {
+                state: ConfigurationState::Valid(ConfigurationFields {
+                    ssid: String::from("Solnet-1234"),
+                    password: String::from("1234"),
+                    night_start: None,
+                    night_end: None,
+                    display_color: Color::new(0, 255, 0),
                 }),
             },
             config

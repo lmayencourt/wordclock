@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 
 use application::behaviour::*;
+use application::color::Color;
 use application::configuration::Configuration;
 use application::configuration_server::ConfigurationServer;
 use application::firmware_update::FirmwareUpdate;
@@ -141,7 +142,7 @@ impl ConfigurationServer for FakeConfigServer {
     fn get_config_uri(&mut self) -> Option<String> {
         if self.is_config_received {
             self.is_config_received = false;
-            Some(String::from("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=23%3A30&input_night_mode_end=04%3A40"))
+            Some(String::from("/get?input_wifi_ssid=myhomenetwork&input_wifi_password=1234&input_night_mode_start=23%3A30&input_night_mode_end=04%3A40&favcolor=%2300ff00"))
         } else {
             None
         }
@@ -241,6 +242,7 @@ fn preset_configuration(
         String::from("secret"),
         Some(Time::new(22, 0, 0).unwrap()),
         Some(Time::new(4, 30, 0).unwrap()),
+        Color::new(0, 0, 0),
     );
     app.configuration_manager
         .store_to_persistent_storage(configuration)

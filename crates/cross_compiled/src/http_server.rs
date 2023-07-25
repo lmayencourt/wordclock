@@ -106,6 +106,7 @@ fn config_form(content: impl AsRef<str>) -> String {
             <span class="tooltiptext">E.g. 08:00 <br>
             Must be between 00:00 and 12:00</span>
         </div><br><br>
+        Display color: <input type="color" id="favcolor" name="favcolor" value="\#0000ff"><br><br>
         <input type="submit" value="Submit" onclick="submitMessage()">
     </form><br>
     <iframe style="display:none" name="hidden-form"></iframe>

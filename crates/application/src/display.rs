@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 
-use crate::time::Time;
+use crate::{time::Time, color::Color};
 
 /// Interface to draw various things on a display.
 /// # Errors
@@ -24,4 +24,7 @@ pub trait Display {
     /// # Errors
     /// Fails early if progress higher than 4 is provided.
     fn draw_progress(&mut self, progress: u8) -> Result<()>;
+
+    /// Set the default color to be used to draw on the display.
+    fn set_default_color(&mut self, color: Color);
 }

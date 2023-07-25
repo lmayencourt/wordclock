@@ -1,15 +1,16 @@
 /* SPDX-License-Identifier: MIT
- * Copyright (c) 2023 Louis Mayencourt
- */
+* Copyright (c) 2023 Louis Mayencourt
+*/
 
- use anyhow::{anyhow, Result};
- use log::*;
+use anyhow::{anyhow, Result};
+use log::*;
 
 use smart_leds::RGB8;
 use smart_leds::colors::*;
 
 use crate::led_driver::RgbLedStrip;
 
+use application::color::Color;
 use application::display::Display;
 use application::time::Time;
 
@@ -91,7 +92,8 @@ const ERROR_SIGN:[RGB8; 114] =
 
 pub struct RgbLedStripMatrix<T: RgbLedStrip> {
     driver: T,
-    frame: [RGB8; LEDS_MATRIX_PIXEL_COUNT]
+    frame: [RGB8; LEDS_MATRIX_PIXEL_COUNT],
+    default_color: Color,
 }
 
 impl<T: RgbLedStrip> RgbLedStripMatrix<T>
@@ -105,7 +107,7 @@ impl<T: RgbLedStrip> RgbLedStripMatrix<T>
     pub fn new(mut driver: T) -> Result<Self> {
         driver.clear()?;
 
-        Ok(RgbLedStripMatrix{driver, frame:[BLACK; LEDS_MATRIX_PIXEL_COUNT]})
+        Ok(RgbLedStripMatrix{driver, frame:[BLACK; LEDS_MATRIX_PIXEL_COUNT], default_color: Color::new(0, 0, 255)})
     }
 
     fn set_pixel_from_lut(&mut self, lut: &[[usize; 3]], idx: usize, color: RGB8) {
@@ -185,52 +187,52 @@ impl<T: RgbLedStrip> Display for RgbLedStripMatrix<T> {
 		if hour_to_display == 0 {
 			hour_to_display = 12;
 		}
-        self.set_pixel_from_lut(&BARN_HOURS_LOOKUP_TABLE, (hour_to_display-1) as usize, BLUE);
+        self.set_pixel_from_lut(&BARN_HOURS_LOOKUP_TABLE, (hour_to_display-1) as usize, self.default_color.rgb);
 
         // Display minutes
 		let minutes_word:usize;
 		if time.minute < 5 {
 			// Es isch
-			self.set_pixel_from_lut(&BARN_WORD_LOOKUP_TABLE, 0, BLUE);
-			self.set_pixel_from_lut(&BARN_WORD_LOOKUP_TABLE, 1, BLUE);
+			self.set_pixel_from_lut(&BARN_WORD_LOOKUP_TABLE, 0, self.default_color.rgb);
+			self.set_pixel_from_lut(&BARN_WORD_LOOKUP_TABLE, 1, self.default_color.rgb);
 			// uhr
 			minutes_word = (time.minute/5) as usize;
 			debug!(" <5 id: {}", minutes_word);
-			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, minutes_word, BLUE);
+			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, minutes_word, self.default_color.rgb);
 		} else if time.minute < 25 {
 			// uhr, füf, zää, zwanzg ab
 			minutes_word = (time.minute/5) as usize;
 			debug!(" <25 id: {}", minutes_word);
-			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, minutes_word, BLUE);
-			self.set_pixel_from_lut(&BARN_PREPOSITION_LOOKUP_TABLE, 0, BLUE);
+			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, minutes_word, self.default_color.rgb);
+			self.set_pixel_from_lut(&BARN_PREPOSITION_LOOKUP_TABLE, 0, self.default_color.rgb);
 		} else if time.minute < 30 {
 			// füf vor halbi h+1
 			debug!(" <30");
-			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_5, BLUE);
-			self.set_pixel_from_lut(&BARN_PREPOSITION_LOOKUP_TABLE, 1, BLUE);
-			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_30, BLUE);
+			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_5, self.default_color.rgb);
+			self.set_pixel_from_lut(&BARN_PREPOSITION_LOOKUP_TABLE, 1, self.default_color.rgb);
+			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_30, self.default_color.rgb);
 
 		} else if time.minute < 35 {
 			// halbi h+1
 			debug!(" <35");
-			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_30, BLUE);
+			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_30, self.default_color.rgb);
 		} else if time.minute < 40 {
 			// füf ab halbi h+1
 			debug!(" <40");
-			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_5, BLUE);
-			self.set_pixel_from_lut(&BARN_PREPOSITION_LOOKUP_TABLE, 0, BLUE);
-			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_30, BLUE);
+			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_5, self.default_color.rgb);
+			self.set_pixel_from_lut(&BARN_PREPOSITION_LOOKUP_TABLE, 0, self.default_color.rgb);
+			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, MIN_30, self.default_color.rgb);
 		} else {
 			// füf, zää, zwanzg vor
 			minutes_word = ((60 - time.minute-1)/5 +1) as usize;
 			debug!(" >40 id: {}", minutes_word);
-			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, minutes_word, BLUE);
-			self.set_pixel_from_lut(&BARN_PREPOSITION_LOOKUP_TABLE, 1, BLUE);
+			self.set_pixel_from_lut(&BARN_MINUTES_LOOKUP_TABLE, minutes_word, self.default_color.rgb);
+			self.set_pixel_from_lut(&BARN_PREPOSITION_LOOKUP_TABLE, 1, self.default_color.rgb);
 		}
 
 		// display inter'minutes
         if time.minute%5 != 0 {
-            self.set_dots(0, (time.minute%5) as usize, BLUE);
+            self.set_dots(0, (time.minute%5) as usize, self.default_color.rgb);
         }
 
         self.draw_frame()?;
@@ -253,9 +255,13 @@ impl<T: RgbLedStrip> Display for RgbLedStripMatrix<T> {
         }
 
         self.new_frame();
-        self.set_dots(0, progress as usize, BLUE);
+        self.set_dots(0, progress as usize, self.default_color.rgb);
         self.draw_frame()?;
 
         Ok(())
+    }
+
+    fn set_default_color(&mut self, color: application::color::Color) {
+        self.default_color = color;
     }
 }
