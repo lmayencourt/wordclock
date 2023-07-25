@@ -44,6 +44,8 @@ impl display::Display for FakeDisplay {
         self.state = FakeDisplayState::Time(time);
         Ok(())
     }
+    fn set_default_color(&mut self, _color: Color) {
+    }
 }
 
 struct MockTime {
@@ -117,7 +119,7 @@ impl network::Network for FakeNetwork {
         self.is_connected
     }
 
-    fn setup_access_point(&mut self, ssid: &str) -> Result<()> {
+    fn setup_access_point(&mut self, _ssid: &str) -> Result<()> {
         self.is_connected = false;
         self.is_access_point = true;
         Ok(())
