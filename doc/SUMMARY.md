@@ -5,7 +5,7 @@
 - [Introduction and goals](./architecture/1_introduction_and_goals.md)
 - [Constraints](./architecture/2_constraints.md)
 - [Context and scope](./architecture/3_context_and_scope.md)
-- [Solution strategy]()
+- [Solution strategy](./architecture/4_solution_strategy.md)
 - [Building block view](./architecture/5_building_block_view.md)
 - [Runtime view]()
 - [Deployment view](./architecture/7_deployment_view.md)
