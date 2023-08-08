@@ -99,6 +99,9 @@ impl Configuration {
                 if value.len() >= 6 {
                     let color = String::from(url_escape::decode(value.as_str()));
                     display_color = Color::from_rgb_hex_string(&color[1..color.len()])?;
+                    if display_color.is_black() {
+                        display_color = Color::default();
+                    }
                 }
             }
 
@@ -411,6 +414,23 @@ mod tests {
                     night_start: None,
                     night_end: None,
                     display_color: Color::new(0, 255, 0),
+                }),
+            },
+            config
+        );
+    }
+
+    #[test]
+    fn from_uri_query_string_with_invalid_color() {
+        let config = Configuration::from_uri_query_string("/get?input_wifi_ssid=Solnet-1234&input_wifi_password=1234&input_night_mode_start=&input_night_mode_end=&favcolor=%23000000").unwrap();
+        assert_eq!(
+            Configuration {
+                state: ConfigurationState::Valid(ConfigurationFields {
+                    ssid: String::from("Solnet-1234"),
+                    password: String::from("1234"),
+                    night_start: None,
+                    night_end: None,
+                    display_color: Color::new(255, 255, 255),
                 }),
             },
             config

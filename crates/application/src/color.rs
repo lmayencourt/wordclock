@@ -39,6 +39,14 @@ impl Color {
             Err(anyhow!("Provided input is not a valid hex rgb string RRGGBB: {}", rgb))
         }
     }
+
+    pub fn is_black(&self) -> bool {
+        if self.rgb.r == 0 && self.rgb.g == 0 && self.rgb.b == 0 {
+            true
+        } else {
+            false
+        }
+    }
 }
 
 impl Default for Color {
@@ -112,5 +120,11 @@ mod tests {
     fn color_to_string() {
         let color = Color::new(170, 187, 204);
         assert_eq!("AABBCC", color.to_string());
+    }
+
+    #[test]
+    fn color_is_black() {
+        let color = Color::new(0,0,0);
+        assert!(color.is_black());
     }
 }
