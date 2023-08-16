@@ -3,6 +3,7 @@
  */
 
 pub mod esp32_soc;
+pub mod ds3231_board_rtc;
 pub mod ota_update;
 pub mod led_driver;
 pub mod http_server;
