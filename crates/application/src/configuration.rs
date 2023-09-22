@@ -430,7 +430,7 @@ mod tests {
                     password: String::from("1234"),
                     night_start: None,
                     night_end: None,
-                    display_color: Color::new(255, 255, 255),
+                    display_color: Default::default(),
                 }),
             },
             config
