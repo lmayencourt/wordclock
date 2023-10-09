@@ -6,10 +6,11 @@ use anyhow::Result;
 
 use crate::time::Time;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum TimeSourceError {
     NotSynchronized,
     SynchronizationError,
+    NotAvailable,
 }
 
 /// Interface to get local time from a time source
@@ -18,4 +19,5 @@ pub enum TimeSourceError {
 pub trait TimeSource {
     fn synchronize(&mut self) -> Result<(), TimeSourceError>;
     fn get_time(&self) -> Result<Time, TimeSourceError>;
+    fn set_time(&mut self, now: Time) -> Result<(), TimeSourceError>;
 }

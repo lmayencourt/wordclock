@@ -28,7 +28,9 @@ pub mod firmware_update;
 pub mod network;
 pub mod power_manager;
 pub mod time;
+pub mod time_monotonic;
 pub mod time_source;
+pub mod time_source_manager;
 pub mod version;
 
 pub struct Application<

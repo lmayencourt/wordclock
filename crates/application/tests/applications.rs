@@ -49,12 +49,12 @@ impl display::Display for FakeDisplay {
 }
 
 struct MockTime {
-    curent: time::Time,
+    current: time::Time,
 }
 
 impl MockTime {
     fn set_time(&mut self, time: time::Time) {
-        self.curent = time;
+        self.current = time;
     }
 }
 
@@ -64,7 +64,12 @@ impl time_source::TimeSource for MockTime {
     }
 
     fn get_time(&self) -> Result<time::Time, TimeSourceError> {
-        Ok(self.curent)
+        Ok(self.current)
+    }
+
+    fn set_time(&mut self, now: Time) -> Result<(), TimeSourceError> {
+        self.current = now;
+        Ok(())
     }
 }
 
@@ -184,7 +189,7 @@ fn get_application() -> Application<
         state: FakeDisplayState::Clean,
     };
     let time_source = MockTime {
-        curent: time::Time::new(11, 22, 33).unwrap(),
+        current: time::Time::new(11, 22, 33).unwrap(),
     };
     let persistent_storage = FakePersistentStorage {
         string_storage: HashMap::new(),

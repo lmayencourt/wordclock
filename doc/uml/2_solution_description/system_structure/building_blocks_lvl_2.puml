@@ -7,6 +7,7 @@ component "WordClock Firmware" as clk_fw{
         rectangle Configuration
         rectangle ConfigurationManager
         rectangle Version
+        rectangle TimeSourceManager
         rectangle Time
 
         component "Platform abstraction" as pal {
@@ -14,6 +15,7 @@ component "WordClock Firmware" as clk_fw{
             interface PersistentStorage
             interface PowerManger
             interface Network
+            interface TimeMonotonic
             interface TimeSource
             interface FirmwareUpdate
             interface ConfigurationServer
@@ -44,9 +46,13 @@ Behaviour ..> Network: use
 Behaviour ..> Display: use
 Behaviour ..> Version: use
 Behaviour ..> FirmwareUpdate: use
+Behaviour ..> TimeSourceManager: use
 Behaviour ..> TimeSource: use
 Behaviour ..> ConfigurationServer: use
 Behaviour ..> PowerManger: use
+TimeSourceManager .> Time: use
+TimeSourceManager ..> TimeMonotonic: use
+TimeSourceManager ..> TimeSource: use
 Time <.. TimeSource: use
 ConfigurationManager ..> PersistentStorage: use
 ConfigurationManager ..> Configuration: use
