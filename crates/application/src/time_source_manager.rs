@@ -117,7 +117,8 @@ impl<T:TimeMonotonic> TimeSource for TimeSourceManager<T> {
             _ => {
                 let current_network_time: Result<Time, TimeSourceError>;
                 // Try to read the network time if out of sync
-                if let Some(network) = &self.network_time {
+                if let Some(network) = &mut self.network_time {
+                    network.synchronize()?;
                     current_network_time = network.get_time();
                     if current_network_time.is_ok() {
                         // Network time is "read only", so reading it count as a sync
@@ -139,7 +140,7 @@ impl<T:TimeMonotonic> TimeSource for TimeSourceManager<T> {
         
                     return Ok(())
                 } else {
-                    warn!("Can't fetch time from network, use board RTC time as primary source");
+                    warn!("Can't fetch time from network, use board RTC time as primary source \n{:?}", current_network_time);
                 }
             }
         }

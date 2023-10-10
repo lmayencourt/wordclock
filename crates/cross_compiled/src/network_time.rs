@@ -127,6 +127,11 @@ impl TimeSource for NetworkTime {
         let now = self::get_time();
         Ok(now)
     }
+
+    fn set_time(&mut self, _now: Time) -> Result<(), TimeSourceError> {
+        // Nothing to do here, we can't set the time of the network
+        Ok(())
+    }
 }
 
 pub fn get_time() -> Time {

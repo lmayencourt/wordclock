@@ -5,6 +5,7 @@
 use std::thread;
 use std::time::Duration;
 
+use cross_compiled::esp32_soc::Esp32SocCpuTime;
 use log::*;
 use anyhow::{Result};
 
@@ -19,8 +20,10 @@ use anyhow::{Result};
 
 use esp_idf_sys as _; // If using the `binstart` feature of `esp-idf-sys`, always keep this module imported
 
-use esp_idf_hal::gpio::*;
 use esp_idf_hal::prelude::*;
+use esp_idf_hal::gpio::*;
+use esp_idf_hal::i2c::I2cDriver;
+use esp_idf_hal::i2c::I2cConfig;
 
 use esp_idf_svc::systime::EspSystemTime;
 
@@ -28,10 +31,12 @@ use application::Application;
 use application::behaviour::*;
 use application::build_version::BUILD_VERSION_STRING;
 use application::network::Network;
+use application::time_source_manager::TimeSourceManager;
 use application::version::Version;
 
-// use cross_compiled::firmware_update;
 use cross_compiled::esp32_soc::Esp32Soc;
+use cross_compiled::esp32_soc::Esp32SocSystemTime;
+use cross_compiled::ds3231_board_rtc::Ds3231Rtc;
 use cross_compiled::led_driver::WS2812;
 use cross_compiled::http_server;
 use cross_compiled::network;
@@ -59,6 +64,10 @@ fn main() -> Result<()> {
     let led_driver = WS2812::new(114, peripherals.pins.gpio15, peripherals.rmt.channel0)?;
     let display = rgb_led_strip_matrix::RgbLedStripMatrix::new(led_driver)?;
 
+    let i2c_config = I2cConfig::new().baudrate(100.kHz().into());
+    let i2c_master = I2cDriver::new(peripherals.i2c0, peripherals.pins.gpio21, peripherals.pins.gpio22, &i2c_config)?;
+    let board_time = Box::new(Ds3231Rtc::new(i2c_master));
+
     let mut network = network::WifiNetwork::new(peripherals.modem)?;
 
     // Anomaly-001: WiFi driver need NVS to be initialized
@@ -77,7 +86,10 @@ fn main() -> Result<()> {
     network.setup_access_point(ACCESS_POINT_NAME)?;
     let http = http_server::HttpServer::new()?;
 
-    let time_source = network_time::NetworkTime::new();
+    let system_time = Esp32SocSystemTime::new();
+    let cpu_time = Box::new(Esp32SocCpuTime::new());
+    let network_time = Box::new(network_time::NetworkTime::new());
+    let time_source = TimeSourceManager::new(system_time, cpu_time, Some(board_time), Some(network_time));
 
     let persistent_storage = NonVolatileStorage;
     let power_manager = Esp32Soc;

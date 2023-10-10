@@ -18,6 +18,8 @@ use network::Network;
 use power_manager::PowerManager;
 use time_source::TimeSource;
 
+use crate::time_source::TimeSourceError;
+
 pub mod behaviour;
 pub mod build_version;
 pub mod color;
@@ -237,6 +239,9 @@ impl<
     }
 
     fn display_time(&mut self) {
+        if let Err(TimeSourceError::NotSynchronized) = self.time_source.get_time() {
+            self.time_source.synchronize().unwrap();
+        }
         let time = self.time_source.get_time().unwrap();
         info!("Displaying time: {}", time);
 

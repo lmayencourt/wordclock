@@ -110,4 +110,12 @@ impl<'a> TimeSource for Ds3231Rtc<'a> {
     fn synchronize(&mut self) -> Result<(), application::time_source::TimeSourceError> {
         Err(application::time_source::TimeSourceError::SynchronizationError)
     }
+
+    fn set_time(&mut self, now: Time) -> Result<(), application::time_source::TimeSourceError> {
+        self.write_register(DS3231_RTC_SECONDES_REG, Self::decimal_to_packed_bcd(now.second)).unwrap();
+        self.write_register(DS3231_RTC_MINUTES_REG, Self::decimal_to_packed_bcd(now.minute)).unwrap();
+        self.write_register(DS3231_RTC_HOURS_REG, Self::decimal_to_packed_bcd(now.hour)).unwrap();
+
+        Ok(())
+    }
 }
