@@ -1,0 +1,532 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>WordClock documentation</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="Capture the important design concept and decisions of the WordClock project">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">System architecture</li><li class="chapter-item expanded "><a href="architecture/1_introduction_and_goals.html"><strong aria-hidden="true">1.</strong> Introduction and goals</a></li><li class="chapter-item expanded "><a href="architecture/2_constraints.html"><strong aria-hidden="true">2.</strong> Constraints</a></li><li class="chapter-item expanded "><a href="architecture/3_context_and_scope.html"><strong aria-hidden="true">3.</strong> Context and scope</a></li><li class="chapter-item expanded "><a href="architecture/4_solution_strategy.html"><strong aria-hidden="true">4.</strong> Solution strategy</a></li><li class="chapter-item expanded "><a href="architecture/5_building_block_view.html"><strong aria-hidden="true">5.</strong> Building block view</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Runtime view</div></li><li class="chapter-item expanded "><a href="architecture/7_deployment_view.html"><strong aria-hidden="true">7.</strong> Deployment view</a></li><li class="chapter-item expanded "><a href="architecture/8_crosscutting_concepts.html"><strong aria-hidden="true">8.</strong> Crosscutting concepts</a></li><li class="chapter-item expanded "><a href="architecture/9_architecture_decisions.html"><strong aria-hidden="true">9.</strong> Architecture decisions</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">10.</strong> Quality</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">11.</strong> Risks and technical debt</div></li><li class="chapter-item expanded "><a href="architecture/12_glossary.html"><strong aria-hidden="true">12.</strong> Glossary</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><li class="part-title">User guide</li><li class="chapter-item expanded "><a href="user_guide_hw_v1.html"><strong aria-hidden="true">13.</strong> User guide 3D printed clock</a></li><li class="chapter-item expanded "><a href="user_guide_hw_v2.html"><strong aria-hidden="true">14.</strong> User guide wood clock</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><li class="part-title">Developer</li><li class="chapter-item expanded "><a href="developer_setup.html"><strong aria-hidden="true">15.</strong> Developer setup</a></li><li class="chapter-item expanded "><a href="bug_avoided.html"><strong aria-hidden="true">16.</strong> Bug avoided</a></li><li class="chapter-item expanded "><a href="esp32_learnings.html"><strong aria-hidden="true">17.</strong> Esp32 learnings</a></li><li class="chapter-item expanded "><a href="release_process.html"><strong aria-hidden="true">18.</strong> Release process</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">WordClock documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction-and-goals"><a class="header" href="#introduction-and-goals">Introduction and goals</a></h1>
+<p><em>WordClock</em> is a hobby project, aiming to create a nice looking time keeping art work.</p>
+<p>The secondary goal is to have a project to experiment with various technologies like Rust, laser cutting, 3d printing, and various engineering skills like software architecture, software requirements, Test-Driven Development and documentation.</p>
+<p>This document is not limited to software architecture, but considers all the work realized by the <em>Embedded engineer</em>, include <a href="architecture/12_glossary.html#PCB">PCB</a> design.</p>
+<h2 id="requirements-overview"><a class="header" href="#requirements-overview">Requirements overview</a></h2>
+<p>Essential features:</p>
+<ul>
+<li>Display current time, using your favorite Swiss-German dialect.</li>
+<li>Set system time, manually or automatically.</li>
+<li>Keep time accurately.</li>
+<li>Disable display during the night, if wanted.</li>
+</ul>
+<h2 id="quality-goals"><a class="header" href="#quality-goals">Quality goals</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>ID</th><th>Quality</th><th>Motivation</th></tr></thead><tbody>
+<tr><td>QG1</td><td>Reliability</td><td>The system shall function reliably under any circumstances.</td></tr>
+<tr><td>QG2</td><td>Autonomous</td><td>The system shall provide long up-time without human intervention.</td></tr>
+<tr><td>QG3</td><td>Testability</td><td>The architecture should allow easy testing of all main building blocks.</td></tr>
+</tbody></table>
+</div>
+<h2 id="stakeholder"><a class="header" href="#stakeholder">Stakeholder</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Stakeholder</th><th>Goal, Intentions</th></tr></thead><tbody>
+<tr><td>Owner</td><td>Want a nice time keeping device, that display the time in her favorite Swiss-German dialect.</td></tr>
+<tr><td>Embedded engineer</td><td>Develop the electronic hardware and software that make the <em>WordClock</em> does its things; Learn and apply new software development skills.</td></tr>
+<tr><td>Wood engineer</td><td>Manufacture the <em>WordClock</em> physical parts; Provides feedbacks and constraints on the <em>WordClock</em> hardware and software.</td></tr>
+</tbody></table>
+</div>
+<h2 id="use-case"><a class="header" href="#use-case">Use case</a></h2>
+<p>Developer:</p>
+<ol>
+<li>Release new version of the firmware.</li>
+<li>Install the firmware on the system.</li>
+<li>Address <em>User</em> reported issue.</li>
+</ol>
+<p>User:</p>
+<ol>
+<li>Read time from system.</li>
+<li>Configure the time of the system.</li>
+<li>Configure the dialect of the system.</li>
+<li>Configure Wi-Fi setup for automatic time setting.</li>
+<li>Configure <em>Night time</em>, where the clock is not displaying the time.</li>
+<li>Report issue to developer.</li>
+<li>Update to latest released version of the firmware, without the need of advanced technical knowledge.</li>
+</ol>
+<p>extra:</p>
+<ul>
+<li>Bluetooth configuration? not yet, but can be an upgrade.</li>
+<li>Chose color of the time? yes!</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="constraints"><a class="header" href="#constraints">Constraints</a></h1>
+<h2 id="organizational-constraints"><a class="header" href="#organizational-constraints">Organizational constraints</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>ID</th><th>Constraints</th><th>Motivation</th></tr></thead><tbody>
+<tr><td>OC1</td><td>Affordable</td><td>The cost to assemble a <em>WordClock</em> should be low.</td></tr>
+<tr><td>OC2</td><td>Documentation</td><td>Use <a href="https://arc42.org">arc42</a> as documentation template.</td></tr>
+<tr><td>OC3</td><td>Language</td><td>Use English for documentation.</td></tr>
+</tbody></table>
+</div>
+<h2 id="technical-constraints"><a class="header" href="#technical-constraints">Technical constraints</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>ID</th><th>Constraints</th><th>Motivation</th></tr></thead><tbody>
+<tr><td>TC1</td><td>Open-source</td><td>Privilege open-source solutions as software dependencies.</td></tr>
+<tr><td>TC2</td><td>Programming language</td><td>Use <a href="https://www.rust-lang.org">Rust</a> as programming language.</td></tr>
+<tr><td>TC3</td><td>Tools</td><td>Use as much as possible the Rust ecosystem for software development and documentation.</td></tr>
+<tr><td>TC4</td><td>Version control</td><td>Use <a href="https://git-scm.com">Git</a> and GitHub for version control.</td></tr>
+</tbody></table>
+</div>
+<h2 id="electronic--mechanical-constraints"><a class="header" href="#electronic--mechanical-constraints">Electronic / Mechanical constraints</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>ID</th><th>Constraints</th><th>Motivation</th></tr></thead><tbody>
+<tr><td>EMC1</td><td>Dimensions</td><td>The electronic dimension should not exceed 190x190[mm]</td></tr>
+<tr><td>EMC2</td><td>Power cable</td><td>The electronic should be powered with a USB Micro-B cable.</td></tr>
+<tr><td>EMC3</td><td>User input</td><td>The electronic should provide at least a push-button for interacting with the system.</td></tr>
+<tr><td>EMC4</td><td>Labels</td><td>The electronic should be labeled for user with no electronic knowledge.</td></tr>
+<tr><td>EMC5</td><td>Fixation</td><td>The electronic should provide 4x 4[mm] fixation holes.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="draft-context-and-scope"><a class="header" href="#draft-context-and-scope">Draft Context and scope</a></h1>
+<h2 id="business-context"><a class="header" href="#business-context">Business context</a></h2>
+<p><img src="architecture/../uml/exported/business_context.png" alt="business_context" /></p>
+<h2 id="technical-context"><a class="header" href="#technical-context">Technical context</a></h2>
+<p><img src="architecture/../uml/exported/technical_context.png" alt="technical_context" /></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="solution-strategy"><a class="header" href="#solution-strategy">Solution Strategy</a></h1>
+<div class="table-wrapper"><table><thead><tr><th>Quality goal</th><th>Achieved by</th><th>Rational</th></tr></thead><tbody>
+<tr><td>Reliability</td><td>Custom <a href="architecture/12_glossary.html#PCB">PCB</a> design for the system hardware.</td><td>The electronic components are assembled on a professionally manufactured circuit board. No manual wiring is needed.</td></tr>
+<tr><td></td><td><a href="architecture/8_crosscutting_concepts.html#rust-std-environment-for-esp32">Rust programming language for the system software</a>.</td><td>Use a system language that focus on correctness and provides native support for testing.</td></tr>
+<tr><td></td><td><a href="architecture/8_crosscutting_concepts.html#document-software-anomalies">Documented software anomalies</a>.</td><td>Anomalies are documented and can be addressed later on by developers.</td></tr>
+<tr><td>Autonomous</td><td>External <a href="architecture/12_glossary.html#rtc">RTC</a> with a backup battery.</td><td>Local time is keep by a dedicated, high precision circuit. The backup battery allow the circuit to keep the time even when the system is not powered.</td></tr>
+<tr><td></td><td>Automatic time synchronization with <a href="architecture/12_glossary.html#ntp">NTP</a>.</td><td>No need for the user to enter the time manually, even after power lose.</td></tr>
+<tr><td>Testability</td><td><a href="architecture/8_crosscutting_concepts.html#test-driven-development-for-embedded-system">TDD for software module</a>.</td><td>Increase confidence of software working as expected.</td></tr>
+<tr><td></td><td>Follow <a href="https://en.wikipedia.org/wiki/Test_double">test-double</a> names for testing.</td><td>Follow a standard, that helps developers to understand the tests structure and behavior.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="building-block-view"><a class="header" href="#building-block-view">Building Block View</a></h1>
+<p>This chapter explains the building blocks of the <em>WordClock</em> system, and its decomposition in sub-system.</p>
+<h2 id="white-box-of-the-wordclock"><a class="header" href="#white-box-of-the-wordclock">White box of the <em>WordClock</em></a></h2>
+<p><img src="architecture/../uml/exported/building_blocks_lvl_1.png" alt="level_1" /></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Responsibility</th></tr></thead><tbody>
+<tr><td>Application</td><td>provides the high-level system behavior.</td></tr>
+<tr><td>Platform abstraction</td><td>decouples the Application implementation from the platform specific hardware.</td></tr>
+<tr><td>Platform</td><td>contains all the hardware specific features.</td></tr>
+<tr><td>Real Time Clock</td><td>is the hardware component responsible to keep track of the time when the system is powered off.</td></tr>
+<tr><td>Led Matrix</td><td>is the hardware component used as display.</td></tr>
+</tbody></table>
+</div>
+<p><img src="architecture/../uml/exported/building_blocks_lvl_2.png" alt="level_2" /></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="deployment-view"><a class="header" href="#deployment-view">Deployment View</a></h1>
+<p><img src="architecture/../uml/exported/system_deployment.png" alt="deployment" /></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="crosscutting-concepts"><a class="header" href="#crosscutting-concepts">Crosscutting Concepts</a></h1>
+<h2 id="document-software-anomalies"><a class="header" href="#document-software-anomalies">Document software anomalies</a></h2>
+<p>Software anomalies are documented in the code with the following template:</p>
+<pre><code>// Anomaly-xxx: &lt;Short description&gt;
+//
+// &lt;Long description&gt;
+</code></pre>
+<p>Where <code>Anomaly-xxx</code> represent a unique anomaly identifier, with <code>xxx</code> as a increasing 3 digits number.
+The anomaly identifier should be used to refer to an anomaly in the documentation or in the code.</p>
+<p>When an anomaly is resolved, the comment is removed from the code base. There is no centralized list of anomalies maintained. <code>git grep</code> should be used to recover past-anomalies descriptions.</p>
+<h2 id="rust-std-environment-for-esp32"><a class="header" href="#rust-std-environment-for-esp32">Rust std environment for ESP32</a></h2>
+<h2 id="test-driven-development-for-embedded-system"><a class="header" href="#test-driven-development-for-embedded-system">Test driven development for embedded system</a></h2>
+<p>Every module should have unit-test that covers near 100% of the module functionalities. The tests should run on the developer machine to allow a fast development cycle.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="architecture-decisions"><a class="header" href="#architecture-decisions">Architecture decisions</a></h1>
+<p>All decisions are recorded according to the <a href="https://socadk.github.io/design-practice-repository/artifact-templates/DPR-ArchitecturalDecisionRecordYForm.html">Y-statement</a> <a href="architecture/12_glossary.html#ADR">ADR</a> template.</p>
+<pre><code>In the context of &lt;use case/user story u&gt;,
+facing &lt;concern c&gt;
+we decided for &lt;option o1&gt;
+(and against &lt;option o2,o3&gt;)
+(because &lt;&gt;)
+to achieve &lt;quality q&gt;,
+accepting &lt;downside d&gt;.
+</code></pre>
+<h2 id="pcb-1-leds-matrix-for-display"><a class="header" href="#pcb-1-leds-matrix-for-display">PCB 1: LEDs matrix for display</a></h2>
+<p>In the context of designing a LEDs matrix for the <em>WordClock</em> display,
+facing the need to choose LEDs component,
+I decided to use WS2812 LEDs strip,
+and neglected single LEDs or WS2812 LEDS,
+to achieve low-cost and simple PCB assembly,
+accepting the bigger dimension constraints of the LEDs strip.</p>
+<h2 id="pcb-2-leds-matrix-routing"><a class="header" href="#pcb-2-leds-matrix-routing">PCB 2: LEDs matrix routing</a></h2>
+<p>In the context of routing the LEDs matrix for the <em>WordClock</em> display,
+facing the need to place the WS2812 LEDs strips on the <a href="architecture/12_glossary.html#PCB">PCB</a>,
+I decided to keep the same layout as the <em>WordClock</em> hardware v1.0 (S like routing of the LEDs strips),
+and neglected a &quot;straight&quot; layout,
+to achieve a unified design across hardware iteration, limiting the number of variant,
+accepting a slightly more complex LEDs matrix driver (half of the LEDs strips are inverted).</p>
+<h2 id="fw-1-configuration-validity-flag"><a class="header" href="#fw-1-configuration-validity-flag">FW 1: Configuration validity flag</a></h2>
+<p>In the context of implementing the persistent storage for the <em>WordClock</em> configuration,
+facing the need to store a boolean value in persistent memory,
+I decided to use a String value &quot;0&quot; and &quot;1&quot;,
+and neglected a dedicated boolean storage API,
+to achieve a simple implementation, using the already implemented String storage API,
+accepting a possible higher memory footprint of the boolean value in memory.</p>
+<h2 id="fw-2-directory-layout-for-ota-images"><a class="header" href="#fw-2-directory-layout-for-ota-images">FW 2: Directory layout for OTA images</a></h2>
+<p>In the context of releasing the OTA images for the new hardware v2 and Rust implementation,
+facing the need to keep the hardware v1 and firmware v1.x.x/v2.x.x OTA working,
+I decided to keep the hardware v1 OTA image at the root, and move the hardware v2 OTA image into a dedicated <code>ota-image/hardware-v2/</code> folder,
+and neglected a dedicated branch <code>released-v2</code> or equivalent,
+to achieve a backward compatible layout, and keep the single, easier to maintain release branch,
+accepting that the hardware v1 OTA image stay for now in the root of the repository, and a migration process will be needed to move them to <code>ota-image/hardware-v2</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="glossary"><a class="header" href="#glossary">Glossary</a></h1>
+<h3 id="adr"><a class="header" href="#adr">ADR</a></h3>
+<p>Architecture Decision Record.</p>
+<h3 id="fw"><a class="header" href="#fw">FW</a></h3>
+<p>Firmware.</p>
+<h3 id="ntp"><a class="header" href="#ntp">NTP</a></h3>
+<p>Network Time Protocol.</p>
+<h3 id="pcb"><a class="header" href="#pcb">PCB</a></h3>
+<p>Printed Circuit Board.</p>
+<h3 id="rtc"><a class="header" href="#rtc">RTC</a></h3>
+<p>Real Time Clock.</p>
+<h3 id="tdd"><a class="header" href="#tdd">TDD</a></h3>
+<p>Test Driven Development.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="user-guide-3d-printed-clock"><a class="header" href="#user-guide-3d-printed-clock">User guide 3D printed clock</a></h1>
+<p>This covers the first iteration of the <em>WordClock</em>, with hardware v1, firmware v1.x.x and v2.x.x.</p>
+<p><img src="./images/leds_matrix_assembled.png" alt="hardware_v1" /></p>
+<h3 id="configuration"><a class="header" href="#configuration">Configuration</a></h3>
+<p>Connect to &quot;WordClock&quot; wifi and go to <a href="http://192.168.4.1">http://192.168.4.1</a> in a browser. Enter your wifi name (SSID) and your wifi password.
+If you want the clock to be off during the night, set the &quot;Night mode&quot; start and end times.</p>
+<blockquote>
+<p><strong>Note:</strong> You may need to restart the clock by pressing the &quot;EN&quot; button.</p>
+</blockquote>
+<h3 id="menu"><a class="header" href="#menu">Menu</a></h3>
+<p>To enter the menu, press the &quot;BOOT&quot; button until the &quot;uhr&quot; is displayed (it may take up to 15 secs to reach the menu). A single push of the &quot;BOOT&quot; button changes the menu, a long push (&lt; 2 secs) validate the menu selection and trigger the associated actions:</p>
+<ul>
+<li>uhr: Go back to time display.</li>
+<li>eis: Check if a new version of the firmware is available and download it.</li>
+<li>zwöi: Erase the current configuration and switch back to configuration mode.</li>
+</ul>
+<h3 id="display-meanings"><a class="header" href="#display-meanings">Display meanings</a></h3>
+<ul>
+<li>1 green dot: Booting.</li>
+<li>2 blue dots: Configuration mode.</li>
+<li>1 blinking red dot: Error. Press &quot;EN&quot; bouton to restart the clock.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="user-guide-wood-clock"><a class="header" href="#user-guide-wood-clock">User guide wood clock</a></h1>
+<p>This covers the second iteration of the <em>WordClock</em>, with custom hardware and firmware v3.x.x</p>
+<h2 id="display-meanings-1"><a class="header" href="#display-meanings-1">Display meanings</a></h2>
+<p>When you power the device, it will display:</p>
+<ul>
+<li>1 dot: Startup.</li>
+<li>2 dots: Configuration mode.</li>
+<li>1 red cross: Error. Press &quot;Restart&quot; button to restart the clock.
+If the startup sequence went successfully, the device will start displaying the time.</li>
+</ul>
+<h3 id="configuration-mode"><a class="header" href="#configuration-mode">Configuration mode</a></h3>
+<p>The device create a WiFi access point called &quot;WordClock Configuration&quot;. In order to configure the clock, you must connect to it and access the page <a href="http://192.168.71.1">http://192.168.71.1</a> in a browser. Enter your wifi name (SSID) and your wifi password.
+If you want the clock to be off during the night, set the &quot;Night mode&quot; start and end times.</p>
+<h2 id="menu-1"><a class="header" href="#menu-1">Menu</a></h2>
+<p>To enter the menu, press the &quot;Enter&quot; button until the first dots is displayed, when the device is displaying the time. A single push of the &quot;Enter&quot; button changes the menu, a long push (&lt; 2 secs) validate the menu selection and trigger the associated actions:</p>
+<ul>
+<li>1 dot: Check if a new version of the firmware is available and download it.</li>
+<li>2 dots: Erase the current configuration and switch back to configuration mode.</li>
+<li>3 dots: Go back to time display.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="developer-setup"><a class="header" href="#developer-setup">Developer setup</a></h1>
+<h2 id="vs-code-configuration-for-rust"><a class="header" href="#vs-code-configuration-for-rust">VS Code configuration for Rust</a></h2>
+<p>Create a <code>.vscode/settings.json</code> with the following content:</p>
+<pre><code>{
+    &quot;rust-analyzer.linkedProjects&quot;: [
+        &quot;Cargo.toml&quot;,
+        &quot;crates/cross_compiled/Cargo.toml&quot;,
+    ]
+}
+</code></pre>
+<h2 id="setup-rust-analyzer-for-esp32"><a class="header" href="#setup-rust-analyzer-for-esp32">Setup rust analyzer for ESP32</a></h2>
+<p>setup the environment variables in <code>.cargo/config.toml</code> to match the <code>export-esp.sh</code> values.</p>
+<h2 id="rust-references"><a class="header" href="#rust-references">Rust references</a></h2>
+<ul>
+<li><a href="https://doc.rust-lang.org/rust-by-example/index.html">Rust by Example</a></li>
+<li><a href="https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html">rustdoc book</a></li>
+<li><a href="https://rust-lang.github.io/api-guidelines/about.html">Rust API Guidelines</a></li>
+<li><a href="https://matklad.github.io/2021/08/22/large-rust-workspaces.html">Large Rust Workspaces</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="bug-that-rust-catch-when-compiling"><a class="header" href="#bug-that-rust-catch-when-compiling">Bug that Rust catch when compiling</a></h1>
+<h2 id="compute-hour_to_display-and-forget-to-use-it"><a class="header" href="#compute-hour_to_display-and-forget-to-use-it">Compute <code>hour_to_display</code> and forget to use it!</a></h2>
+<pre><code>fn draw_time(&amp;mut self, time: Time) -&gt; Result&lt;()&gt; {
+        let mut hour_to_display = time.hour;
+        if time.minute &gt;=25 {
+            hour_to_display = time.hour+1;
+        }
+        // 24 -&gt; 12
+		if hour_to_display &gt; 12 {
+			hour_to_display = hour_to_display - 12 ;
+		}
+		// midnight
+		if hour_to_display == 0 {
+			hour_to_display = 12;
+		}
+        self.set_pixel_from_lut(&amp;BARN_HOURS_LOOKUP_TABLE, (time.hour-1) as usize, RED);
+}
+</code></pre>
+<pre><code>warning: value assigned to `hour_to_display` is never read
+   --&gt; src/display.rs:154:4
+    |
+154 |             hour_to_display = 12;
+    |             ^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+````
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="esp32-developer-learnings"><a class="header" href="#esp32-developer-learnings">ESP32 developer learnings</a></h1>
+<h2 id="reading-the-esp32-partition-table"><a class="header" href="#reading-the-esp32-partition-table">Reading the ESP32 partition table</a></h2>
+<p>Extract the partition table from a ESP32 device FLASH and dump the table to
+stdout:</p>
+<pre><code>esptool.py read_flash 0x8000 0xc00 ptable.img
+python3 crates/cross_compiled/.embuild/espressif/esp-idf/release-v4.4/components/partition_table/gen_esp32part.py ptable.img
+</code></pre>
+<p>Even better, using <code>espflash</code>:</p>
+<pre><code>espflash partition-table ptable.img
+</code></pre>
+<h2 id="partition-table-must-be-flashed-explicitly"><a class="header" href="#partition-table-must-be-flashed-explicitly">Partition table must be flashed explicitly</a></h2>
+<p>When using the <code>espflash</code> command to program the device, the <code>--partition-table</code>
+option should be used to update the device partition table.</p>
+<pre><code>espflash /dev/tty.usbserial-0001 crates/cross_compiled/target/xtensa-esp32-espidf/debug/cross_compiled --flash-freq 80M --flash-size 4MB --flash-mode DIO --speed 921600 --partition-table crates/cross_compiled/esp32_ota_partitions.csv
+</code></pre>
+<p>This is necessary to flash an image with FOTA capabilities.
+Omitting to specify the partition-table in the command can allow to flash bigger images, like debug build.</p>
+<h2 id="partitions-restrictions"><a class="header" href="#partitions-restrictions">Partitions restrictions</a></h2>
+<p>Partitions must be 0x10000 (64kB) aligned.</p>
+<h2 id="generate-an-ota-image"><a class="header" href="#generate-an-ota-image">Generate an OTA image</a></h2>
+<p>Use the <code>espflash</code> tool to convert an <code>ELF</code> image to <code>bin</code> format:</p>
+<pre><code>espflash save-image ESP32 --flash-size 2MB crates/cross_compiled/target/xtensa-esp32-espidf/release/cross_compiled ota-test-img/ota_v0.1.0.bin
+</code></pre>
+<p>This also allow to see the real size of the image binary in FLASH.</p>
+<h2 id="needed-cargo-espflash"><a class="header" href="#needed-cargo-espflash">needed cargo-espflash?</a></h2>
+<pre><code>cargo install cargo-espflash
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="release-process"><a class="header" href="#release-process">Release process</a></h1>
+<h2 id="release-tests"><a class="header" href="#release-tests">Release tests</a></h2>
+<ol>
+<li>Run the unit-test: <code>cargo test</code></li>
+<li>Run the manual-test:
+<ol>
+<li>Build the binary in release mode: <code>cargo xbuild --release</code></li>
+<li>Flash the binary on the board: <code>espflash /dev/tty.usbserial-0001 crates/cross_compiled/target/xtensa-esp32-espidf/release/cross_compiled --flash-freq 80M --flash-size 4MB --fla sh-mode DIO --speed 921600 --monitor --partition-table crates/cross_compiled/esp32_ota_partitions.csv</code></li>
+</ol>
+</li>
+</ol>
+<h3 id="manual-tests"><a class="header" href="#manual-tests">Manual tests</a></h3>
+<ol>
+<li>Invalid configuration -&gt; start of configuration server <code>WordClock Configuration</code>.</li>
+<li>HTML page is displayed properly.</li>
+<li>Entering a valid configuration is parsed, and stored in persistent memory.</li>
+<li>Valid configuration -&gt; the system switch to display time state.</li>
+<li>The time displayed is correct.</li>
+<li>Manuel reset of the device with 'Reset' button loads configuration from persistent memory and start displaying time properly.</li>
+<li>Pressing (long or short) the 'Enter' button switch the system to the menu.</li>
+<li>Long press on FOTA menu triggers FOTA.</li>
+<li>FOTA download succeed with log: <code>I (115661) application: Update ready, restart device</code>.</li>
+<li>System restart in new version.</li>
+</ol>
+<h2 id="generate-release-binary"><a class="header" href="#generate-release-binary">Generate release binary</a></h2>
+<ol>
+<li>Build firmware in release mode: <code>cargo xbuild --release</code> </li>
+<li>Build the tagged OTA image: <code>cargo generate_ota release</code></li>
+<li>Commit and push changes to <code>main</code> branch.</li>
+<li>Update the <code>released</code> branch to latest <code>master</code>.</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>

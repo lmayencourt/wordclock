@@ -1,0 +1,263 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Architecture decisions - WordClock documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="Capture the important design concept and decisions of the WordClock project">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">System architecture</li><li class="chapter-item expanded "><a href="../architecture/1_introduction_and_goals.html"><strong aria-hidden="true">1.</strong> Introduction and goals</a></li><li class="chapter-item expanded "><a href="../architecture/2_constraints.html"><strong aria-hidden="true">2.</strong> Constraints</a></li><li class="chapter-item expanded "><a href="../architecture/3_context_and_scope.html"><strong aria-hidden="true">3.</strong> Context and scope</a></li><li class="chapter-item expanded "><a href="../architecture/4_solution_strategy.html"><strong aria-hidden="true">4.</strong> Solution strategy</a></li><li class="chapter-item expanded "><a href="../architecture/5_building_block_view.html"><strong aria-hidden="true">5.</strong> Building block view</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Runtime view</div></li><li class="chapter-item expanded "><a href="../architecture/7_deployment_view.html"><strong aria-hidden="true">7.</strong> Deployment view</a></li><li class="chapter-item expanded "><a href="../architecture/8_crosscutting_concepts.html"><strong aria-hidden="true">8.</strong> Crosscutting concepts</a></li><li class="chapter-item expanded "><a href="../architecture/9_architecture_decisions.html" class="active"><strong aria-hidden="true">9.</strong> Architecture decisions</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">10.</strong> Quality</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">11.</strong> Risks and technical debt</div></li><li class="chapter-item expanded "><a href="../architecture/12_glossary.html"><strong aria-hidden="true">12.</strong> Glossary</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><li class="part-title">User guide</li><li class="chapter-item expanded "><a href="../user_guide_hw_v1.html"><strong aria-hidden="true">13.</strong> User guide 3D printed clock</a></li><li class="chapter-item expanded "><a href="../user_guide_hw_v2.html"><strong aria-hidden="true">14.</strong> User guide wood clock</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><li class="part-title">Developer</li><li class="chapter-item expanded "><a href="../developer_setup.html"><strong aria-hidden="true">15.</strong> Developer setup</a></li><li class="chapter-item expanded "><a href="../bug_avoided.html"><strong aria-hidden="true">16.</strong> Bug avoided</a></li><li class="chapter-item expanded "><a href="../esp32_learnings.html"><strong aria-hidden="true">17.</strong> Esp32 learnings</a></li><li class="chapter-item expanded "><a href="../release_process.html"><strong aria-hidden="true">18.</strong> Release process</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">WordClock documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="architecture-decisions"><a class="header" href="#architecture-decisions">Architecture decisions</a></h1>
+<p>All decisions are recorded according to the <a href="https://socadk.github.io/design-practice-repository/artifact-templates/DPR-ArchitecturalDecisionRecordYForm.html">Y-statement</a> <a href="12_glossary.html#ADR">ADR</a> template.</p>
+<pre><code>In the context of &lt;use case/user story u&gt;,
+facing &lt;concern c&gt;
+we decided for &lt;option o1&gt;
+(and against &lt;option o2,o3&gt;)
+(because &lt;&gt;)
+to achieve &lt;quality q&gt;,
+accepting &lt;downside d&gt;.
+</code></pre>
+<h2 id="pcb-1-leds-matrix-for-display"><a class="header" href="#pcb-1-leds-matrix-for-display">PCB 1: LEDs matrix for display</a></h2>
+<p>In the context of designing a LEDs matrix for the <em>WordClock</em> display,
+facing the need to choose LEDs component,
+I decided to use WS2812 LEDs strip,
+and neglected single LEDs or WS2812 LEDS,
+to achieve low-cost and simple PCB assembly,
+accepting the bigger dimension constraints of the LEDs strip.</p>
+<h2 id="pcb-2-leds-matrix-routing"><a class="header" href="#pcb-2-leds-matrix-routing">PCB 2: LEDs matrix routing</a></h2>
+<p>In the context of routing the LEDs matrix for the <em>WordClock</em> display,
+facing the need to place the WS2812 LEDs strips on the <a href="12_glossary.html#PCB">PCB</a>,
+I decided to keep the same layout as the <em>WordClock</em> hardware v1.0 (S like routing of the LEDs strips),
+and neglected a &quot;straight&quot; layout,
+to achieve a unified design across hardware iteration, limiting the number of variant,
+accepting a slightly more complex LEDs matrix driver (half of the LEDs strips are inverted).</p>
+<h2 id="fw-1-configuration-validity-flag"><a class="header" href="#fw-1-configuration-validity-flag">FW 1: Configuration validity flag</a></h2>
+<p>In the context of implementing the persistent storage for the <em>WordClock</em> configuration,
+facing the need to store a boolean value in persistent memory,
+I decided to use a String value &quot;0&quot; and &quot;1&quot;,
+and neglected a dedicated boolean storage API,
+to achieve a simple implementation, using the already implemented String storage API,
+accepting a possible higher memory footprint of the boolean value in memory.</p>
+<h2 id="fw-2-directory-layout-for-ota-images"><a class="header" href="#fw-2-directory-layout-for-ota-images">FW 2: Directory layout for OTA images</a></h2>
+<p>In the context of releasing the OTA images for the new hardware v2 and Rust implementation,
+facing the need to keep the hardware v1 and firmware v1.x.x/v2.x.x OTA working,
+I decided to keep the hardware v1 OTA image at the root, and move the hardware v2 OTA image into a dedicated <code>ota-image/hardware-v2/</code> folder,
+and neglected a dedicated branch <code>released-v2</code> or equivalent,
+to achieve a backward compatible layout, and keep the single, easier to maintain release branch,
+accepting that the hardware v1 OTA image stay for now in the root of the repository, and a migration process will be needed to move them to <code>ota-image/hardware-v2</code>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../architecture/8_crosscutting_concepts.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../architecture/12_glossary.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../architecture/8_crosscutting_concepts.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../architecture/12_glossary.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

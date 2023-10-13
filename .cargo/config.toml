@@ -1,0 +1,13 @@
+[alias]
+xtask = 'run -p xtask --'
+xcheck = 'run -p xtask -- check'
+xbuild = 'run -p xtask -- build'
+xclean = 'run -p xtask -- clean'
+xflash = 'run -p xtask -- flash'
+xdoc = 'run -p xtask -- doc'
+uml = 'run -p xtask -- uml'
+generate_ota = 'run -p xtask -- generate_ota'
+
+[env]
+RUST_ESP32_WIFI_SSID = "my_home_wifi"
+RUST_ESP32_WIFI_PASSWORD = "secret"

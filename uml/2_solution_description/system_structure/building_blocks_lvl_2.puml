@@ -1,0 +1,75 @@
+@startuml
+mainframe Building blocks - level 2
+
+component "WordClock Firmware" as clk_fw{
+    component Application {
+        rectangle Behaviour
+        rectangle Configuration
+        rectangle ConfigurationManager
+        rectangle Version
+        rectangle TimeSourceManager
+        rectangle Time
+
+        component "Platform abstraction" as pal {
+            interface Display
+            interface PersistentStorage
+            interface PowerManger
+            interface Network
+            interface TimeMonotonic
+            interface TimeSource
+            interface FirmwareUpdate
+            interface ConfigurationServer
+        }
+    }
+
+    component Platform {
+        rectangle Esp32Soc
+        rectangle RgbLedStripMatrix
+        rectangle LedDriver
+        rectangle NTP
+        rectangle RTC
+        rectangle NVS
+        rectangle WiFi
+        rectangle HttpClient
+        rectangle OTA
+        rectangle HttpServer
+    }
+}
+
+component "Real Time Clock" as Rtc
+component "Led Matrix" as Led_matrix
+
+Behaviour .> Configuration: use
+Behaviour .> ConfigurationManager: use
+Behaviour .> Time: use
+Behaviour ..> Network: use
+Behaviour ..> Display: use
+Behaviour ..> Version: use
+Behaviour ..> FirmwareUpdate: use
+Behaviour ..> TimeSourceManager: use
+Behaviour ..> TimeSource: use
+Behaviour ..> ConfigurationServer: use
+Behaviour ..> PowerManger: use
+TimeSourceManager .> Time: use
+TimeSourceManager ..> TimeMonotonic: use
+TimeSourceManager ..> TimeSource: use
+Time <.. TimeSource: use
+ConfigurationManager ..> PersistentStorage: use
+ConfigurationManager ..> Configuration: use
+Version <.. FirmwareUpdate: use
+
+Display <|-- RgbLedStripMatrix
+RgbLedStripMatrix ..> LedDriver: use
+PersistentStorage <|-- NVS
+Network <|-- WiFi
+TimeSource <|-- NTP
+TimeSource <|-- RTC
+ConfigurationServer <|-- HttpServer
+FirmwareUpdate ..> OTA: use
+FirmwareUpdate ..> HttpClient: use
+PowerManger <|-- Esp32Soc
+
+RTC ...> Rtc
+LedDriver ..> Led_matrix
+
+@enduml
