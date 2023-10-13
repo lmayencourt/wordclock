@@ -24,6 +24,7 @@ pub mod behaviour;
 pub mod build_version;
 pub mod color;
 pub mod configuration;
+pub mod configuration_form;
 pub mod configuration_server;
 pub mod display;
 pub mod firmware_update;
